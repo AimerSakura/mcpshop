@@ -1,0 +1,37 @@
+# Web 框架
+fastapi==0.115.9
+starlette==0.45.3
+uvicorn==0.34.3
+
+# 异步 & HTTP 客户端
+anyio==4.9.0
+httpx==0.28.1
+websockets==15.0.1
+
+# ORM & 数据库
+SQLAlchemy==2.0.41
+asyncpg>=0.27.0
+
+# 数据验证
+pydantic==2.11.5
+
+# 环境 & 文件上传
+python-dotenv==1.1.0
+python-multipart==0.0.20
+
+# 安全 & 认证
+passlib[bcrypt]==1.7.4
+jose==1.0.0
+
+# MCP SDK
+mcp==1.9.3
+uv==0.7.12
+
+# 向量检索（本地 embedding）
+chromadb==1.0.12
+sentence-transformers==2.7.0
+transformers==4.41.0
+torch>=2.2.2
+
+# 调用 OpenAI
+openai==1.86.0

@@ -1,3 +1,5 @@
+# 文件：backend/mcpshop/services/mcp_client.py
+
 import os
 import sys
 import json
@@ -9,7 +11,6 @@ from openai import OpenAI
 # 1. 载入 .env
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env")
 
-
 class MCPClient:
     """基于 HTTP 的 MCP demo 客户端"""
 
@@ -17,10 +18,13 @@ class MCPClient:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("❌ 请在 .env 中设置 OPENAI_API_KEY")
-
-        # OpenAI 同步 SDK（包装到线程池里）
         self.oa = OpenAI(api_key=api_key, base_url=os.getenv("BASE_URL") or None)
         self.model = os.getenv("MODEL", "deepseek-chat")
+
+        # —— 读取管理员 Token ——
+        self.admin_token = os.getenv("ADMIN_TOKEN")
+        if not self.admin_token:
+            raise ValueError("❌ 请在 .env 中设置 ADMIN_TOKEN")
 
         # fastmcp HTTP 客户端
         self.client = Client(server_url)
@@ -28,10 +32,9 @@ class MCPClient:
     # ------------------------- 核心逻辑 -------------------------
 
     async def process_query(self, query: str) -> str:
-        """向 LLM 发送消息，必要时自动调用 MCP 工具"""
         messages = [{"role": "user", "content": query}]
 
-        # ① 向服务器拉取全部工具 schema
+        # ① 拉取工具列表并构造 funcs schema
         tools = await self.client.list_tools()
         func_schemas = [
             {
@@ -45,7 +48,7 @@ class MCPClient:
             for tool in tools
         ]
 
-        # ② 首轮推理（可能触发 tool_calls）
+        # ② 首轮推理
         first = await asyncio.to_thread(
             self.oa.chat.completions.create,
             model=self.model,
@@ -54,32 +57,30 @@ class MCPClient:
         )
         choice = first.choices[0]
 
-        # 无 tool_call：直接返回文本
         if choice.finish_reason != "tool_calls":
             return choice.message.content
 
-        # ③ 执行一次工具
+        # ③ 执行工具
         tc = choice.message.tool_calls[0]
         tool_name = tc.function.name
         tool_args = json.loads(tc.function.arguments)
+
+        # —— 如果是 add_product，自动注入管理员 token ——
+        if tool_name == "add_product":
+            tool_args.setdefault("token", self.admin_token)
+
         print(f"[调用工具] {tool_name} {tool_args}")
-
         exec_res = await self.client.call_tool(tool_name, tool_args)
-
-        # fastmcp ≥0.4 直接返回原始结果；旧版返回带 .content 的对象
         result_content = getattr(exec_res, "content", exec_res)
 
         # ④ 把工具结果写回对话，再次推理
         messages.append(choice.message.model_dump())
-        messages.append(
-            {
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "name": tool_name,
-                # OpenAI 要求 string，所以先转 JSON 字符串
-                "content": json.dumps(result_content, ensure_ascii=False),
-            }
-        )
+        messages.append({
+            "role": "tool",
+            "tool_call_id": tc.id,
+            "name": tool_name,
+            "content": json.dumps(result_content, ensure_ascii=False),
+        })
 
         second = await asyncio.to_thread(
             self.oa.chat.completions.create,
@@ -112,7 +113,6 @@ class MCPClient:
                 return
             await self.chat_loop()
 
-
 # ------------------------- 入口 -------------------------
 
 async def _main():
@@ -122,7 +122,6 @@ async def _main():
     url = sys.argv[1]
     client = MCPClient(url)
     await client.run()
-
 
 if __name__ == "__main__":
     asyncio.run(_main())

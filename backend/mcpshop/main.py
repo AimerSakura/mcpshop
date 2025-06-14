@@ -1,21 +1,17 @@
-# mcpshop/main.py
+# 文件：backend/mcpshop/main.py
+
 import os
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
 
-# # 验证环境变量是否正确加载
-# print("DATABASE_URL:", os.getenv("DATABASE_URL"))
-# print("REDIS_URL:", os.getenv("REDIS_URL"))
-# print("JWT_SECRET_KEY:", os.getenv("JWT_SECRET_KEY"))
-# print("MCP_API_URL:", os.getenv("MCP_API_URL"))
-# print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
-from typing import List
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from mcpshop.core.config import settings
-from mcpshop.api import auth, cart, chat, orders, products
-from mcpshop.db.session import engine
-from mcpshop.db.base import Base
+from mcpshop.core.config      import settings
+from mcpshop.api              import auth, cart, chat, orders, products
+from mcpshop.db.session       import engine
+from mcpshop.db.base          import Base
+from mcpshop.scripts.mcp_server import mcp
+
 import uvicorn
 
 def create_app() -> FastAPI:
@@ -23,7 +19,7 @@ def create_app() -> FastAPI:
         title=settings.PROJECT_NAME,
         version=settings.VERSION
     )
-    # CORS
+    # CORS 配置
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -32,16 +28,20 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 路由
+    # —— 公共 REST API 路由 ——
+    # 这些 router 在各自文件里已声明了 prefix="/api/xxx"
     app.include_router(auth.router)
     app.include_router(cart.router)
     app.include_router(chat.router)
     app.include_router(orders.router)
     app.include_router(products.router)
 
+    # —— 将所有 MCP 工具挂载到 /mcp ——
+    app.mount("/mcp", mcp)
+
     @app.on_event("startup")
     async def on_startup() -> None:
-        # **开发演示**：直接创建表。生产请换成 Alembic 迁移。
+        # **开发演示**：自动建表。生产请使用 Alembic。
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 

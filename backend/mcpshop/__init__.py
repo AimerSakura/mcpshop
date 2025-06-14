@@ -7,7 +7,9 @@ SmartStore 应用包初始化。
     from mcpshop import settings, logger
 而无需每次都写完整路径。
 """
-
+import os
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
 # —— 包级别导出 ——
 from .core.config import settings
 from .core.logger import logger

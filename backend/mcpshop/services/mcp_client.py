@@ -1,200 +1,127 @@
-# mcpshop/services/mcp_client.py
-"""
-MCPClient  ——  智慧商城客户端 (Stdio + Function-Calling)
--------------------------------------------------------
-✦ 环境变量 (建议放 .env)               说明
-  ───────────────────────────────────────────────────────
-  OPENAI_API_KEY   OpenAI API Key（必填）
-  BASE_URL         OpenAI 代理 / 反向代理地址（可选）
-  MODEL            默认模型，如 gpt-4o-mini（可选，默认 gpt-4o-mini）
-"""
-
-import asyncio
-import json
 import os
 import sys
-from contextlib import AsyncExitStack
-from typing import Optional
-
+import json
+import asyncio
 from dotenv import load_dotenv
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-from openai import OpenAI           # 同步 SDK，用 asyncio.to_thread 包装
+from fastmcp import Client
+from openai import OpenAI
 
-# ────────────────────────────────
-# 环境加载
-# ────────────────────────────────
-load_dotenv()                       # 读取 .env
+# 1. 载入 .env
+load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env")
 
 
 class MCPClient:
-    """对话客户端：负责
-    1. 启动 / 连接 MCP Server (Stdio)
-    2. 把可用工具列表交给 OpenAI 进行 Function-Calling
-    3. 若触发 tool_calls，则执行并把结果回传给模型
-    """
+    """基于 HTTP 的 MCP demo 客户端"""
 
-    def __init__(self) -> None:
-        self.exit_stack = AsyncExitStack()
+    def __init__(self, server_url: str):
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("❌ 请在 .env 中设置 OPENAI_API_KEY")
 
-        # ── OpenAI 配置 ────────────────────────────────────────────
-        self.openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
-        if not self.openai_api_key:
-            raise ValueError("❌ 未找到 OPENAI_API_KEY，请在 .env 中设置")
+        # OpenAI 同步 SDK（包装到线程池里）
+        self.oa = OpenAI(api_key=api_key, base_url=os.getenv("BASE_URL") or None)
+        self.model = os.getenv("MODEL", "deepseek-chat")
 
-        self.base_url: str | None = os.getenv("BASE_URL")  # 代理 / 反代
-        self.model: str = os.getenv("MODEL", "gpt-4o-mini")
+        # fastmcp HTTP 客户端
+        self.client = Client(server_url)
 
-        # 同步客户端；后续用 asyncio.to_thread 调用避免阻塞事件循环
-        self.oa = OpenAI(api_key=self.openai_api_key, base_url=self.base_url)
+    # ------------------------- 核心逻辑 -------------------------
 
-        # MCP 连接对象
-        self.session: Optional[ClientSession] = None
-        self.stdio = None            # read_stream
-        self.write = None            # write_stream (send)
-
-    # ──────────────────────────────────────────────────────────────
-    # 1) 连接 / 启动服务器
-    # ──────────────────────────────────────────────────────────────
-    async def connect_to_server(self, server_script_path: str) -> None:
-        """
-        启动（或连接）MCP 服务器脚本（.py / .js 均可）
-        """
-        ext = os.path.splitext(server_script_path)[1]
-        if ext not in {".py", ".js"}:
-            raise ValueError("服务器脚本必须是 .py 或 .js 文件!")
-
-        command = "python" if ext == ".py" else "node"
-        server_params = StdioServerParameters(
-            command=command,
-            args=[server_script_path],
-            env=None,                # 继承默认环境变量
-        )
-
-        # 启动子进程并建立 stdin/stdout 双流
-        self.stdio, self.write = await self.exit_stack.enter_async_context(
-            stdio_client(server_params)
-        )
-
-        # 创建 Session
-        self.session = await self.exit_stack.enter_async_context(
-            ClientSession(self.stdio, self.write)
-        )
-        await self.session.initialize()       # 握手
-
-        # 列出工具
-        tools_resp = await self.session.list_tools()
-        tool_names = [t.name for t in tools_resp.tools]
-        print("✅ 已连接 MCP 服务器，支持工具:", tool_names)
-
-    # ──────────────────────────────────────────────────────────────
-    # 2) 处理单轮查询
-    # ──────────────────────────────────────────────────────────────
     async def process_query(self, query: str) -> str:
-        """
-        发给 OpenAI → 解析 tool_calls → 执行工具 → 二次回复
-        """
-        if self.session is None:
-            raise RuntimeError("❌ 未连接到服务器，请先调用 connect_to_server()")
-
-        # 基础对话历史（可扩展为存储上下文）
+        """向 LLM 发送消息，必要时自动调用 MCP 工具"""
         messages = [{"role": "user", "content": query}]
 
-        # ── ① 获取工具 schema 列表
-        list_resp = await self.session.list_tools()
-        available_tools = [
+        # ① 向服务器拉取全部工具 schema
+        tools = await self.client.list_tools()
+        func_schemas = [
             {
                 "type": "function",
                 "function": {
-                    "name": t.name,
-                    "description": t.description,
-                    "parameters": t.inputSchema,  # OpenAI 1.x 需用 parameters/key
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": getattr(tool, "inputSchema", getattr(tool, "input_schema", {})),
                 },
             }
-            for t in list_resp.tools
+            for tool in tools
         ]
 
-        # ── ② 第一次调用大模型（可能触发工具）
-        first_resp = await asyncio.to_thread(
+        # ② 首轮推理（可能触发 tool_calls）
+        first = await asyncio.to_thread(
             self.oa.chat.completions.create,
             model=self.model,
             messages=messages,
-            tools=available_tools,
+            tools=func_schemas,
         )
-        choice = first_resp.choices[0]
+        choice = first.choices[0]
 
-        # 未触发工具
+        # 无 tool_call：直接返回文本
         if choice.finish_reason != "tool_calls":
             return choice.message.content
 
-        # ── ③ 若有 tool_calls，执行并回写
-        tool_call = choice.message.tool_calls[0]          # 演示只取第一个
-        tool_name = tool_call.function.name
-        tool_args = json.loads(tool_call.function.arguments)
+        # ③ 执行一次工具
+        tc = choice.message.tool_calls[0]
+        tool_name = tc.function.name
+        tool_args = json.loads(tc.function.arguments)
+        print(f"[调用工具] {tool_name} {tool_args}")
 
-        # 执行工具
-        print(f"\n[Tool] → {tool_name} {tool_args}")
-        exec_result = await self.session.call_tool(tool_name, tool_args)
+        exec_res = await self.client.call_tool(tool_name, tool_args)
 
-        # 把执行结果加入对话
+        # fastmcp ≥0.4 直接返回原始结果；旧版返回带 .content 的对象
+        result_content = getattr(exec_res, "content", exec_res)
+
+        # ④ 把工具结果写回对话，再次推理
         messages.append(choice.message.model_dump())
         messages.append(
             {
                 "role": "tool",
-                "tool_call_id": tool_call.id,             # 必需
+                "tool_call_id": tc.id,
                 "name": tool_name,
-                "content": json.dumps(exec_result.content),
+                # OpenAI 要求 string，所以先转 JSON 字符串
+                "content": json.dumps(result_content, ensure_ascii=False),
             }
         )
 
-        # ── ④ 第二次让模型生成最终回复
-        second_resp = await asyncio.to_thread(
+        second = await asyncio.to_thread(
             self.oa.chat.completions.create,
             model=self.model,
             messages=messages,
         )
-        return second_resp.choices[0].message.content
+        return second.choices[0].message.content
 
-    # ──────────────────────────────────────────────────────────────
-    # 3) 命令行对话循环 (Demo)
-    # ──────────────────────────────────────────────────────────────
-    async def chat_loop(self) -> None:
-        """简单 CLI，输入 quit 退出"""
-        print("\n🤖 进入对话，输入 quit 退出。")
+    # ------------------------- CLI 对话循环 -------------------------
+
+    async def chat_loop(self):
+        print("🤖 进入对话（HTTP 模式），输入 quit 退出")
         while True:
+            prompt = input("你: ").strip()
+            if prompt.lower() == "quit":
+                break
             try:
-                user_in = input("\n你: ").strip()
-                if user_in.lower() == "quit":
-                    break
-                reply = await self.process_query(user_in)
-                print(f"\n🤖: {reply}")
-            except Exception as exc:
-                print(f"\n⚠️ 发生错误: {exc}")
+                resp = await self.process_query(prompt)
+                print("🤖:", resp)
+            except Exception as e:
+                print("⚠️ 出错:", e)
 
-    # ──────────────────────────────────────────────────────────────
-    # 4) 资源清理
-    # ──────────────────────────────────────────────────────────────
-    async def cleanup(self) -> None:
-        """退出时关闭所有 async context"""
-        await self.exit_stack.aclose()
+    async def run(self):
+        async with self.client as client:
+            try:
+                await client.ping()
+                print("✅ MCP Server 握手成功，开始对话")
+            except Exception as e:
+                print("❌ 握手失败，请检查 URL 或服务状态：", e)
+                return
+            await self.chat_loop()
 
 
-# ──────────────────────────────────────────────────────────────────
-# CLI 入口：python -m mcpshop.services.mcp_client <path_to_server.py>
-# ──────────────────────────────────────────────────────────────────
-async def _main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: python -m mcpshop.services.mcp_client scripts/mcp_server.py")
+# ------------------------- 入口 -------------------------
+
+async def _main():
+    if len(sys.argv) != 2:
+        print("用法: python -m mcpshop.services.mcp_client <http://host:port/mcp>")
         sys.exit(1)
-
-    server_path = sys.argv[1]
-    client = MCPClient()
-
-    try:
-        await client.connect_to_server(server_path)
-        await client.chat_loop()
-    finally:
-        await client.cleanup()
+    url = sys.argv[1]
+    client = MCPClient(url)
+    await client.run()
 
 
 if __name__ == "__main__":

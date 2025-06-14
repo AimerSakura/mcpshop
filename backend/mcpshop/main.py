@@ -3,12 +3,12 @@ import os
 from dotenv import load_dotenv
 load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
 
-# 验证环境变量是否正确加载
-print("DATABASE_URL:", os.getenv("DATABASE_URL"))
-print("REDIS_URL:", os.getenv("REDIS_URL"))
-print("JWT_SECRET_KEY:", os.getenv("JWT_SECRET_KEY"))
-print("MCP_API_URL:", os.getenv("MCP_API_URL"))
-print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
+# # 验证环境变量是否正确加载
+# print("DATABASE_URL:", os.getenv("DATABASE_URL"))
+# print("REDIS_URL:", os.getenv("REDIS_URL"))
+# print("JWT_SECRET_KEY:", os.getenv("JWT_SECRET_KEY"))
+# print("MCP_API_URL:", os.getenv("MCP_API_URL"))
+# print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
 from typing import List
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -50,4 +50,4 @@ def create_app() -> FastAPI:
 app = create_app()
 
 if __name__ == "__main__":
-    uvicorn.run("mcpshop.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("mcpshop.main:app", host="127.0.0.1", port=8000, reload=True)

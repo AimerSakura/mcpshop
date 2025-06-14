@@ -3,7 +3,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from mcpshop.core.config import settings
-
+from contextlib import asynccontextmanager
 # 1. 创建异步引擎
 engine = create_async_engine(
     settings.DATABASE_URL,  # 格式示例：mysql+asyncmy://user:pass@host:3306/dbname
@@ -20,6 +20,7 @@ AsyncSessionLocal = sessionmaker(
 
 
 # 3. 依赖注入函数：在 FastAPI 路由中使用 Depends(get_db)
+@asynccontextmanager
 async def get_db() -> AsyncSession:
     """
     Yield 一个 AsyncSession，并在使用完后自动关闭连接。

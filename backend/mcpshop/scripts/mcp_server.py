@@ -11,7 +11,16 @@ Smart-Store MCP Server  (FastMCP 版本)
    • ASGI (默认)：      python scripts/mcp_server.py
    • stdio（嵌入式）：  python scripts/mcp_server.py --stdio
 """
+import os
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
 
+# 验证环境变量是否正确加载
+print("DATABASE_URL:", os.getenv("DATABASE_URL"))
+print("REDIS_URL:", os.getenv("REDIS_URL"))
+print("JWT_SECRET_KEY:", os.getenv("JWT_SECRET_KEY"))
+print("MCP_API_URL:", os.getenv("MCP_API_URL"))
+print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
 from typing import List
 import asyncio
 import argparse
@@ -21,18 +30,9 @@ from mcpshop.crud import product as crud_product, cart as crud_cart
 from mcpshop.db.session import get_db
 from dotenv import load_dotenv
 
-import os
-from dotenv import load_dotenv
 
 # 加载环境变量
-load_dotenv()
 
-# 验证环境变量是否正确加载
-print("DATABASE_URL:", os.getenv("DATABASE_URL"))
-print("REDIS_URL:", os.getenv("REDIS_URL"))
-print("JWT_SECRET_KEY:", os.getenv("JWT_SECRET_KEY"))
-print("MCP_API_URL:", os.getenv("MCP_API_URL"))
-print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
 
 
 mcp = FastMCP("SmartStoreToolServer")
@@ -93,7 +93,7 @@ if __name__ == "__main__":
         # 如果想最小依赖，也可以 transport="http"
         mcp.run(
             transport="streamable-http",
-            host="0.0.0.0",
-            port=args.port,
-            log_level="info",
+            # host="0.0.0.0",
+            # port=args.port,
+            # log_level="info",
         )

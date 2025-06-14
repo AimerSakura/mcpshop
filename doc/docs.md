@@ -1,33 +1,141 @@
+# 项目代码快照（版本 v0.1.0，2025-06-14 22:05:36）
+
 ## 项目结构
 
-项目根目录： `C:\CodeProject\Pycharm\MCPshop`
+- backend
+  - mcpshop
+    - __init__.py
+    - api
+      - auth.py
+      - cart.py
+      - chat.py
+      - deps.py
+      - orders.py
+      - products.py
+    - core
+      - __init__.py
+      - config.py
+      - embedding.py
+      - logger.py
+      - security.py
+    - crud
+      - __init__.py
+      - cart.py
+      - category.py
+      - conversation.py
+      - message.py
+      - order.py
+      - product.py
+      - user.py
+    - db
+      - __init__.py
+      - base.py
+      - session.py
+    - main.py
+    - models
+      - __init__.py
+      - cart_item.py
+      - category.py
+      - conversation.py
+      - message.py
+      - order.py
+      - order_item.py
+      - product.py
+      - user.py
+    - schemas
+      - __init__.py
+      - auth.py
+      - cart.py
+      - category.py
+      - chat.py
+      - order.py
+      - product.py
+      - user.py
+    - scripts
+      - __init__.py
+      - mcp_server.py
+    - services
+      - mcp_client.py
 
-后端模块路径： `C:\CodeProject\Pycharm\MCPshop\backend\mcpshop`
+## 目录
 
-子模块：
+- [backend\mcpshop\__init__.py](#backend\mcpshop\__init__py)
+- [backend\mcpshop\api\auth.py](#backend\mcpshop\api\authpy)
+- [backend\mcpshop\api\cart.py](#backend\mcpshop\api\cartpy)
+- [backend\mcpshop\api\chat.py](#backend\mcpshop\api\chatpy)
+- [backend\mcpshop\api\deps.py](#backend\mcpshop\api\depspy)
+- [backend\mcpshop\api\orders.py](#backend\mcpshop\api\orderspy)
+- [backend\mcpshop\api\products.py](#backend\mcpshop\api\productspy)
+- [backend\mcpshop\core\__init__.py](#backend\mcpshop\core\__init__py)
+- [backend\mcpshop\core\config.py](#backend\mcpshop\core\configpy)
+- [backend\mcpshop\core\embedding.py](#backend\mcpshop\core\embeddingpy)
+- [backend\mcpshop\core\logger.py](#backend\mcpshop\core\loggerpy)
+- [backend\mcpshop\core\security.py](#backend\mcpshop\core\securitypy)
+- [backend\mcpshop\crud\__init__.py](#backend\mcpshop\crud\__init__py)
+- [backend\mcpshop\crud\cart.py](#backend\mcpshop\crud\cartpy)
+- [backend\mcpshop\crud\category.py](#backend\mcpshop\crud\categorypy)
+- [backend\mcpshop\crud\conversation.py](#backend\mcpshop\crud\conversationpy)
+- [backend\mcpshop\crud\message.py](#backend\mcpshop\crud\messagepy)
+- [backend\mcpshop\crud\order.py](#backend\mcpshop\crud\orderpy)
+- [backend\mcpshop\crud\product.py](#backend\mcpshop\crud\productpy)
+- [backend\mcpshop\crud\user.py](#backend\mcpshop\crud\userpy)
+- [backend\mcpshop\db\__init__.py](#backend\mcpshop\db\__init__py)
+- [backend\mcpshop\db\base.py](#backend\mcpshop\db\basepy)
+- [backend\mcpshop\db\session.py](#backend\mcpshop\db\sessionpy)
+- [backend\mcpshop\main.py](#backend\mcpshop\mainpy)
+- [backend\mcpshop\models\__init__.py](#backend\mcpshop\models\__init__py)
+- [backend\mcpshop\models\cart_item.py](#backend\mcpshop\models\cart_itempy)
+- [backend\mcpshop\models\category.py](#backend\mcpshop\models\categorypy)
+- [backend\mcpshop\models\conversation.py](#backend\mcpshop\models\conversationpy)
+- [backend\mcpshop\models\message.py](#backend\mcpshop\models\messagepy)
+- [backend\mcpshop\models\order.py](#backend\mcpshop\models\orderpy)
+- [backend\mcpshop\models\order_item.py](#backend\mcpshop\models\order_itempy)
+- [backend\mcpshop\models\product.py](#backend\mcpshop\models\productpy)
+- [backend\mcpshop\models\user.py](#backend\mcpshop\models\userpy)
+- [backend\mcpshop\schemas\__init__.py](#backend\mcpshop\schemas\__init__py)
+- [backend\mcpshop\schemas\auth.py](#backend\mcpshop\schemas\authpy)
+- [backend\mcpshop\schemas\cart.py](#backend\mcpshop\schemas\cartpy)
+- [backend\mcpshop\schemas\category.py](#backend\mcpshop\schemas\categorypy)
+- [backend\mcpshop\schemas\chat.py](#backend\mcpshop\schemas\chatpy)
+- [backend\mcpshop\schemas\order.py](#backend\mcpshop\schemas\orderpy)
+- [backend\mcpshop\schemas\product.py](#backend\mcpshop\schemas\productpy)
+- [backend\mcpshop\schemas\user.py](#backend\mcpshop\schemas\userpy)
+- [backend\mcpshop\scripts\__init__.py](#backend\mcpshop\scripts\__init__py)
+- [backend\mcpshop\scripts\mcp_server.py](#backend\mcpshop\scripts\mcp_serverpy)
+- [backend\mcpshop\services\mcp_client.py](#backend\mcpshop\services\mcp_clientpy)
+
+### `backend\mcpshop\__init__.py`
+- 行数：18 行  
+- 大小：0.47 KB  
+- 最后修改：2025-06-14 20:44:59  
+
+```py
+# mcpshop/__init__.py
+
+"""
+SmartStore 应用包初始化。
+
+这里将常用的配置和日志器暴露到包级别，方便在项目中直接：
+    from mcpshop import settings, logger
+而无需每次都写完整路径。
+"""
+import os
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
+# —— 包级别导出 ——
+from .core.config import settings
+from .core.logger import logger
+
+__all__ = ["settings", "logger"]
 
 ```
-mcpshop/
-├── api       # 接口层
-├── core      # 核心模块
-├── crud      # 数据增删改查逻辑
-├── db        # 数据库连接与初始化
-├── models    # ORM 模型定义
-├── schemas   # Pydantic 数据验证与序列化
-└── services  # 业务逻辑层
-```
 
-请继续发送各模块的代码文件，我会将它们逐步添加到文档中。
+### `backend\mcpshop\api\auth.py`
+- 行数：40 行  
+- 大小：1.58 KB  
+- 最后修改：2025-06-11 17:35:46  
 
-------
-
-## api 模块
-
-目录： `mcpshop/api`
-
-### auth.py
-
-```python
+```py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
@@ -70,9 +178,12 @@ async def login_for_access_token(
 
 ```
 
-### cart.py
+### `backend\mcpshop\api\cart.py`
+- 行数：41 行  
+- 大小：1.3 KB  
+- 最后修改：2025-06-11 16:59:02  
 
-```python
+```py
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -116,9 +227,12 @@ async def clear_user_cart(
     await clear_cart(db, user.user_id)
 ```
 
-### chat.py
+### `backend\mcpshop\api\chat.py`
+- 行数：73 行  
+- 大小：2.48 KB  
+- 最后修改：2025-06-11 21:36:12  
 
-```python
+```py
 # mcpshop/api/chat.py
 from pathlib import Path
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
@@ -194,9 +308,12 @@ async def websocket_chat(
 
 ```
 
-### deps.py
+### `backend\mcpshop\api\deps.py`
+- 行数：29 行  
+- 大小：0.96 KB  
+- 最后修改：2025-06-11 16:59:02  
 
-```python
+```py
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
@@ -228,9 +345,12 @@ async def get_current_user(
     return user
 ```
 
-### orders.py
+### `backend\mcpshop\api\orders.py`
+- 行数：36 行  
+- 大小：1.21 KB  
+- 最后修改：2025-06-11 17:30:55  
 
-```python
+```py
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -269,9 +389,12 @@ async def list_orders(
 
 ```
 
-### products.py
+### `backend\mcpshop\api\products.py`
+- 行数：61 行  
+- 大小：1.97 KB  
+- 最后修改：2025-06-11 16:59:02  
 
-```python
+```py
 from typing import List
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -335,308 +458,66 @@ async def delete_sku(
 
 ```
 
-请继续发送下一个模块的代码文件，我会继续添加。
+### `backend\mcpshop\core\__init__.py`
+- 行数：1 行  
+- 大小：0.03 KB  
+- 最后修改：2025-05-28 14:56:08  
 
-------
-
-## crud 模块
-
-目录： `mcpshop/crud`
-
-### **init**.py
-
-```python
-from .user import *
-from .category import *
-from .product import *
-from .cart import *
-from .order import *
-from .conversation import *
-from .message import *
-```
-
-### cart.py
-
-```python
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from mcpshop.models.cart_item import CartItem
-from mcpshop.models.product import Product                 # ✅ 用于库存校验
-from mcpshop.schemas.cart import CartItemCreate
-
-async def add_to_cart(db: AsyncSession, user_id: int, sku: str, quantity: int = 1) -> CartItem:
-    # ✅ 校验商品存在 & 库存充足
-    prod = await db.get(Product, sku)
-    if not prod or prod.stock < quantity:
-        raise ValueError("商品不存在或库存不足")
-
-    result = await db.execute(
-        select(CartItem).where(CartItem.user_id == user_id, CartItem.sku == sku)
-    )
-    item = result.scalars().first()
-    if item:
-        if prod.stock < item.quantity + quantity:
-            raise ValueError("库存不足")
-        item.quantity += quantity
-    else:
-        item = CartItem(user_id=user_id, sku=sku, quantity=quantity)
-        db.add(item)
-
-    await db.commit()
-    await db.refresh(item)
-    return item
-
-
-async def remove_cart_item(db: AsyncSession, cart_item_id: int) -> None:
-    stmt = select(CartItem).where(CartItem.cart_item_id == cart_item_id)
-    result = await db.execute(stmt)
-    item = result.scalars().first()
-    if item:
-        await db.delete(item)
-        await db.commit()
-
-async def get_cart_items(db: AsyncSession, user_id: int) -> list[CartItem]:
-    result = await db.execute(select(CartItem).where(CartItem.user_id == user_id))
-    return result.scalars().all()
-
-async def clear_cart(db: AsyncSession, user_id: int) -> None:
-    items = await get_cart_items(db, user_id)
-    for item in items:
-        await db.delete(item)
-    await db.commit()
-```
-
-### category.py
-
-```python
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from mcpshop.models.category import Category
-from mcpshop.schemas.category import CategoryCreate
-
-async def create_category(db: AsyncSession, cat_in: CategoryCreate) -> Category:
-    cat = Category(name=cat_in.name)
-    db.add(cat)
-    await db.commit()
-    await db.refresh(cat)
-    return cat
-
-async def get_category(db: AsyncSession, category_id: int) -> Category | None:
-    result = await db.execute(select(Category).where(Category.category_id == category_id))
-    return result.scalars().first()
-
-async def list_categories(db: AsyncSession) -> list[Category]:
-    result = await db.execute(select(Category))
-    return result.scalars().all()
-```
-
-### conversation.py
-
-```python
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from mcpshop.models.conversation import Conversation
-
-async def create_conversation(db: AsyncSession, user_id: int, session_id: str) -> Conversation:
-    conv = Conversation(user_id=user_id, session_id=session_id)
-    db.add(conv)
-    await db.commit()
-    await db.refresh(conv)
-    return conv
-
-async def get_conversation(db: AsyncSession, conv_id: int) -> Conversation | None:
-    result = await db.execute(select(Conversation).where(Conversation.conv_id == conv_id))
-    return result.scalars().first()
-
-```
-
-### message.py
-
-```python
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from mcpshop.models.message import Message, Sender          # ✅ 引入枚举
-from mcpshop.schemas.chat import MessageIn
-
-async def add_message(db: AsyncSession, conv_id: int, sender: str, content: str) -> Message:
-    msg = Message(conv_id=conv_id, sender=Sender(sender), content=content)  # ✅ 枚举化
-    db.add(msg)
-    await db.commit()
-    await db.refresh(msg)
-    return msg
-
-async def get_messages(db: AsyncSession, conv_id: int) -> list[Message]:
-    result = await db.execute(select(Message).where(Message.conv_id == conv_id).order_by(Message.created_at))
-    return result.scalars().all()
-
-
-```
-
-### order.py
-
-```python
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from sqlalchemy.orm import selectinload
-from typing import List
-from mcpshop.models.order import Order
-from mcpshop.models.order_item import OrderItem
-from mcpshop.models.product import Product
-
-async def create_order(db: AsyncSession, user_id: int, items: list[dict]) -> Order:
-    total = 0
-    order = Order(user_id=user_id, total_cents=0)
-    db.add(order)
-    await db.flush()                      # 先拿到 order_id
-
-    for it in items:
-        prod: Product = await db.get(Product, it["sku"], with_for_update=True)  # ✅ 行锁保证并发安全
-        if not prod:
-            raise ValueError(f"商品 {it['sku']} 不存在")
-        qty = it["quantity"]
-        if prod.stock < qty:
-            raise ValueError(f"商品 {prod.sku} 库存不足")
-        total += prod.price_cents * qty
-        db.add(OrderItem(
-            order_id=order.order_id,
-            sku=prod.sku,
-            quantity=qty,
-            unit_price=prod.price_cents
-        ))
-        prod.stock -= qty
-
-    order.total_cents = total
-    await db.commit()
-    await db.refresh(order, ["items"])     # ✅ 提前加载 items，避免懒加载失败
-    return order
-
-async def get_orders_by_user(db: AsyncSession, user_id: int) -> List[Order]:
-    result = await db.execute(
-        select(Order).options(selectinload(Order.items))   # ✅ 解决 MissingGreenlet
-        .where(Order.user_id == user_id)
-    )
-    return result.scalars().all()
-
-```
-
-### product.py
-
-```python
-# app/crud/product.py
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy import or_
-from typing import List
-from mcpshop.models.product import Product
-from mcpshop.schemas.product import ProductCreate
-
-async def get_all_products(db: AsyncSession) -> List[Product]:
-    result = await db.execute(select(Product))
-    return result.scalars().all()
-
-async def create_product(db: AsyncSession, p_in: ProductCreate) -> Product:
-    prod = Product(
-        sku=p_in.sku,
-        name=p_in.name,
-        price_cents=p_in.price_cents,
-        stock=p_in.stock,
-        description=p_in.description,
-        image_url=p_in.image_url,
-        category_id=p_in.category_id
-    )
-    db.add(prod)
-    await db.commit()
-    await db.refresh(prod)
-    return prod
-
-async def get_product_by_sku(db: AsyncSession, sku: str) -> Product | None:
-    result = await db.execute(select(Product).where(Product.sku == sku))
-    return result.scalars().first()
-
-async def search_products(db: AsyncSession, q: str, limit: int = 20) -> List[Product]:
-    stmt = select(Product).where(
-        or_(Product.name.ilike(f"%{q}%"), Product.description.ilike(f"%{q}%"))
-    ).limit(limit)
-    result = await db.execute(stmt)
-    return result.scalars().all()
-```
-
-### user.py
-
-```python
-# app/crud/user.py
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from mcpshop.models.user import User
-from mcpshop.core.security import get_password_hash, verify_password
-from mcpshop.schemas.user import UserCreate
-
-async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
-    result = await db.execute(select(User).where(User.username == username))
-    return result.scalars().first()
-
-async def authenticate_user(db: AsyncSession, username: str, password: str) -> User | None:
-    user = await get_user_by_username(db, username)
-    if not user or not verify_password(password, user.password_hash):
-        return None
-    return user
-
-async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
-    user = User(
-        username=user_in.username,
-        email=user_in.email,
-        password_hash=get_password_hash(user_in.password)
-    )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    return user
-```
-
-请继续发送下一个模块的代码文件，我会继续添加。
-
-------
-
-## core 模块
-
-目录： `mcpshop/core`
-
-### **init**.py
-
-```python
+```py
 from .config import Settings
 ```
 
-### config.py
+### `backend\mcpshop\core\config.py`
+- 行数：37 行  
+- 大小：1.13 KB  
+- 最后修改：2025-06-12 00:25:42  
 
-```python
+```py
 # mcpshop/core/config.py
-from pydantic_settings import BaseSettings        # ✅ 新位置
+from pydantic_settings import BaseSettings
 from pydantic import Field, AnyUrl
+
+
 class Settings(BaseSettings):
+    # —— 项目基础信息 ——  
     PROJECT_NAME: str = "SmartStore"
     VERSION: str = "0.1.0"
 
-    DATABASE_URL: AnyUrl = Field(..., env="DATABASE_URL")
-    REDIS_URL: AnyUrl = Field(..., env="REDIS_URL")
+    # —— 数据库 & 缓存 ——  
+    DATABASE_URL: str = Field(..., env="DATABASE_URL")
+    REDIS_URL: str = Field(..., env="REDIS_URL")
 
+    # —— JWT ——  
     JWT_SECRET_KEY: str = Field(..., env="JWT_SECRET_KEY")
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
+    # —— MCP Server ——  
     MCP_API_URL: AnyUrl = Field(..., env="MCP_API_URL")
-    MCP_API_KEY: str = Field(..., env="MCP_API_KEY")
+    MCP_API_KEY: str | None = Field(None, env="MCP_API_KEY")
+
+    # —— OpenAI / MCPClient ——  
+    OPENAI_API_KEY: str = Field(..., env="OPENAI_API_KEY")
+    BASE_URL: str | None = Field(None, env="BASE_URL")
+    MODEL: str = Field("deepseek-reasoner", env="MODEL")
 
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        extra = "ignore"       # 忽略 .env 中多余未经声明的变量
 
+
+# 在模块顶层实例化
 settings = Settings()
 
 ```
-### embedding.py
 
-```python
+### `backend\mcpshop\core\embedding.py`
+- 行数：39 行  
+- 大小：1.39 KB  
+- 最后修改：2025-06-11 21:07:14  
+
+```py
 # mcpshop/core/embedding.py
 
 import subprocess
@@ -678,10 +559,12 @@ self.embedding_fn = LocalQwenEmbeddingFunction(
 
 ```
 
+### `backend\mcpshop\core\logger.py`
+- 行数：23 行  
+- 大小：0.63 KB  
+- 最后修改：2025-05-28 15:10:24  
 
-### logger.py
-
-```python
+```py
 # mcpshop/core/logger.py
 from loguru import logger
 import sys
@@ -707,9 +590,12 @@ logger.add(
 
 ```
 
-### security.py
+### `backend\mcpshop\core\security.py`
+- 行数：64 行  
+- 大小：1.87 KB  
+- 最后修改：2025-05-28 15:10:24  
 
-```python
+```py
 # mcpshop/core/security.py
 
 from mcpshop.core.config import settings
@@ -776,23 +662,295 @@ def decode_access_token(token: str) -> str:
 
 ```
 
-请继续发送下一个模块的代码文件，我会继续添加。
+### `backend\mcpshop\crud\__init__.py`
+- 行数：8 行  
+- 大小：0.16 KB  
+- 最后修改：2025-06-11 13:19:43  
 
-------
+```py
+from .user import *
+from .category import *
+from .product import *
+from .cart import *
+from .order import *
+from .conversation import *
+from .message import *
 
-## db 模块
-
-目录： `mcpshop/db`
-
-### **init**.py
-
-```python
-# 空文件，用于标识包
 ```
 
-### base.py
+### `backend\mcpshop\crud\cart.py`
+- 行数：46 行  
+- 大小：1.67 KB  
+- 最后修改：2025-06-11 17:33:48  
 
-```python
+```py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from mcpshop.models.cart_item import CartItem
+from mcpshop.models.product import Product                 # ✅ 用于库存校验
+from mcpshop.schemas.cart import CartItemCreate
+
+async def add_to_cart(db: AsyncSession, user_id: int, sku: str, quantity: int = 1) -> CartItem:
+    # ✅ 校验商品存在 & 库存充足
+    prod = await db.get(Product, sku)
+    if not prod or prod.stock < quantity:
+        raise ValueError("商品不存在或库存不足")
+
+    result = await db.execute(
+        select(CartItem).where(CartItem.user_id == user_id, CartItem.sku == sku)
+    )
+    item = result.scalars().first()
+    if item:
+        if prod.stock < item.quantity + quantity:
+            raise ValueError("库存不足")
+        item.quantity += quantity
+    else:
+        item = CartItem(user_id=user_id, sku=sku, quantity=quantity)
+        db.add(item)
+
+    await db.commit()
+    await db.refresh(item)
+    return item
+
+
+async def remove_cart_item(db: AsyncSession, cart_item_id: int) -> None:
+    stmt = select(CartItem).where(CartItem.cart_item_id == cart_item_id)
+    result = await db.execute(stmt)
+    item = result.scalars().first()
+    if item:
+        await db.delete(item)
+        await db.commit()
+
+async def get_cart_items(db: AsyncSession, user_id: int) -> list[CartItem]:
+    result = await db.execute(select(CartItem).where(CartItem.user_id == user_id))
+    return result.scalars().all()
+
+async def clear_cart(db: AsyncSession, user_id: int) -> None:
+    items = await get_cart_items(db, user_id)
+    for item in items:
+        await db.delete(item)
+    await db.commit()
+```
+
+### `backend\mcpshop\crud\category.py`
+- 行数：19 行  
+- 大小：0.73 KB  
+- 最后修改：2025-06-11 13:20:47  
+
+```py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from mcpshop.models.category import Category
+from mcpshop.schemas.category import CategoryCreate
+
+async def create_category(db: AsyncSession, cat_in: CategoryCreate) -> Category:
+    cat = Category(name=cat_in.name)
+    db.add(cat)
+    await db.commit()
+    await db.refresh(cat)
+    return cat
+
+async def get_category(db: AsyncSession, category_id: int) -> Category | None:
+    result = await db.execute(select(Category).where(Category.category_id == category_id))
+    return result.scalars().first()
+
+async def list_categories(db: AsyncSession) -> list[Category]:
+    result = await db.execute(select(Category))
+    return result.scalars().all()
+```
+
+### `backend\mcpshop\crud\conversation.py`
+- 行数：15 行  
+- 大小：0.59 KB  
+- 最后修改：2025-06-11 13:22:25  
+
+```py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from mcpshop.models.conversation import Conversation
+
+async def create_conversation(db: AsyncSession, user_id: int, session_id: str) -> Conversation:
+    conv = Conversation(user_id=user_id, session_id=session_id)
+    db.add(conv)
+    await db.commit()
+    await db.refresh(conv)
+    return conv
+
+async def get_conversation(db: AsyncSession, conv_id: int) -> Conversation | None:
+    result = await db.execute(select(Conversation).where(Conversation.conv_id == conv_id))
+    return result.scalars().first()
+
+```
+
+### `backend\mcpshop\crud\message.py`
+- 行数：16 行  
+- 大小：0.68 KB  
+- 最后修改：2025-06-11 17:32:25  
+
+```py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from mcpshop.models.message import Message, Sender          # ✅ 引入枚举
+from mcpshop.schemas.chat import MessageIn
+
+async def add_message(db: AsyncSession, conv_id: int, sender: str, content: str) -> Message:
+    msg = Message(conv_id=conv_id, sender=Sender(sender), content=content)  # ✅ 枚举化
+    db.add(msg)
+    await db.commit()
+    await db.refresh(msg)
+    return msg
+
+async def get_messages(db: AsyncSession, conv_id: int) -> list[Message]:
+    result = await db.execute(select(Message).where(Message.conv_id == conv_id).order_by(Message.created_at))
+    return result.scalars().all()
+
+```
+
+### `backend\mcpshop\crud\order.py`
+- 行数：42 行  
+- 大小：1.52 KB  
+- 最后修改：2025-06-11 17:32:03  
+
+```py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from typing import List
+from mcpshop.models.order import Order
+from mcpshop.models.order_item import OrderItem
+from mcpshop.models.product import Product
+
+async def create_order(db: AsyncSession, user_id: int, items: list[dict]) -> Order:
+    total = 0
+    order = Order(user_id=user_id, total_cents=0)
+    db.add(order)
+    await db.flush()                      # 先拿到 order_id
+
+    for it in items:
+        prod: Product = await db.get(Product, it["sku"], with_for_update=True)  # ✅ 行锁保证并发安全
+        if not prod:
+            raise ValueError(f"商品 {it['sku']} 不存在")
+        qty = it["quantity"]
+        if prod.stock < qty:
+            raise ValueError(f"商品 {prod.sku} 库存不足")
+        total += prod.price_cents * qty
+        db.add(OrderItem(
+            order_id=order.order_id,
+            sku=prod.sku,
+            quantity=qty,
+            unit_price=prod.price_cents
+        ))
+        prod.stock -= qty
+
+    order.total_cents = total
+    await db.commit()
+    await db.refresh(order, ["items"])     # ✅ 提前加载 items，避免懒加载失败
+    return order
+
+async def get_orders_by_user(db: AsyncSession, user_id: int) -> List[Order]:
+    result = await db.execute(
+        select(Order).options(selectinload(Order.items))   # ✅ 解决 MissingGreenlet
+        .where(Order.user_id == user_id)
+    )
+    return result.scalars().all()
+
+```
+
+### `backend\mcpshop\crud\product.py`
+- 行数：37 行  
+- 大小：1.28 KB  
+- 最后修改：2025-06-11 20:38:52  
+
+```py
+# app/crud/product.py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import or_
+from typing import List
+from mcpshop.models.product import Product
+from mcpshop.schemas.product import ProductCreate
+
+async def get_all_products(db: AsyncSession) -> List[Product]:
+    result = await db.execute(select(Product))
+    return result.scalars().all()
+
+async def create_product(db: AsyncSession, p_in: ProductCreate) -> Product:
+    prod = Product(
+        sku=p_in.sku,
+        name=p_in.name,
+        price_cents=p_in.price_cents,
+        stock=p_in.stock,
+        description=p_in.description,
+        image_url=p_in.image_url,
+        category_id=p_in.category_id
+    )
+    db.add(prod)
+    await db.commit()
+    await db.refresh(prod)
+    return prod
+
+async def get_product_by_sku(db: AsyncSession, sku: str) -> Product | None:
+    result = await db.execute(select(Product).where(Product.sku == sku))
+    return result.scalars().first()
+
+async def search_products(db: AsyncSession, q: str, limit: int = 20) -> List[Product]:
+    stmt = select(Product).where(
+        or_(Product.name.ilike(f"%{q}%"), Product.description.ilike(f"%{q}%"))
+    ).limit(limit)
+    result = await db.execute(stmt)
+    return result.scalars().all()
+```
+
+### `backend\mcpshop\crud\user.py`
+- 行数：27 行  
+- 大小：1.0 KB  
+- 最后修改：2025-06-11 13:20:15  
+
+```py
+# app/crud/user.py
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from mcpshop.models.user import User
+from mcpshop.core.security import get_password_hash, verify_password
+from mcpshop.schemas.user import UserCreate
+
+async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
+    result = await db.execute(select(User).where(User.username == username))
+    return result.scalars().first()
+
+async def authenticate_user(db: AsyncSession, username: str, password: str) -> User | None:
+    user = await get_user_by_username(db, username)
+    if not user or not verify_password(password, user.password_hash):
+        return None
+    return user
+
+async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
+    user = User(
+        username=user_in.username,
+        email=user_in.email,
+        password_hash=get_password_hash(user_in.password)
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+```
+
+### `backend\mcpshop\db\__init__.py`
+- 行数：1 行  
+- 大小：0.0 KB  
+- 最后修改：2025-05-28 14:58:20  
+
+```py
+
+```
+
+### `backend\mcpshop\db\base.py`
+- 行数：14 行  
+- 大小：0.44 KB  
+- 最后修改：2025-05-28 15:10:24  
+
+```py
 # mcpshop/db/base.py
 
 from sqlalchemy.orm import declarative_base
@@ -809,15 +967,18 @@ Base = declarative_base()
 
 ```
 
-### session.py
+### `backend\mcpshop\db\session.py`
+- 行数：34 行  
+- 大小：1.15 KB  
+- 最后修改：2025-06-14 21:21:41  
 
-```python
+```py
 # mcpshop/db/session.py
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from mcpshop.core.config import settings
-
+from contextlib import asynccontextmanager
 # 1. 创建异步引擎
 engine = create_async_engine(
     settings.DATABASE_URL,  # 格式示例：mysql+asyncmy://user:pass@host:3306/dbname
@@ -834,6 +995,7 @@ AsyncSessionLocal = sessionmaker(
 
 
 # 3. 依赖注入函数：在 FastAPI 路由中使用 Depends(get_db)
+@asynccontextmanager
 async def get_db() -> AsyncSession:
     """
     Yield 一个 AsyncSession，并在使用完后自动关闭连接。
@@ -847,17 +1009,74 @@ async def get_db() -> AsyncSession:
 
 ```
 
-请继续发送下一个模块的代码文件，我会继续添加。
+### `backend\mcpshop\main.py`
+- 行数：54 行  
+- 大小：1.63 KB  
+- 最后修改：2025-06-14 20:29:07  
 
-------
+```py
+# mcpshop/main.py
+import os
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
 
-## models 模块
+# # 验证环境变量是否正确加载
+# print("DATABASE_URL:", os.getenv("DATABASE_URL"))
+# print("REDIS_URL:", os.getenv("REDIS_URL"))
+# print("JWT_SECRET_KEY:", os.getenv("JWT_SECRET_KEY"))
+# print("MCP_API_URL:", os.getenv("MCP_API_URL"))
+# print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
+from typing import List
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from mcpshop.core.config import settings
+from mcpshop.api import auth, cart, chat, orders, products
+from mcpshop.db.session import engine
+from mcpshop.db.base import Base
+import uvicorn
 
-目录： `mcpshop/models`
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title=settings.PROJECT_NAME,
+        version=settings.VERSION
+    )
+    # CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
-### **init**.py
+    # 路由
+    app.include_router(auth.router)
+    app.include_router(cart.router)
+    app.include_router(chat.router)
+    app.include_router(orders.router)
+    app.include_router(products.router)
 
-```python
+    @app.on_event("startup")
+    async def on_startup() -> None:
+        # **开发演示**：直接创建表。生产请换成 Alembic 迁移。
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
+    return app
+
+app = create_app()
+
+if __name__ == "__main__":
+    uvicorn.run("mcpshop.main:app", host="127.0.0.1", port=8000, reload=True)
+
+```
+
+### `backend\mcpshop\models\__init__.py`
+- 行数：8 行  
+- 大小：0.24 KB  
+- 最后修改：2025-05-28 14:51:14  
+
+```py
 from .user import User
 from .product import Product
 from .category import Category
@@ -868,9 +1087,12 @@ from .conversation import Conversation
 from .message import Message
 ```
 
-### cart_item.py
+### `backend\mcpshop\models\cart_item.py`
+- 行数：16 行  
+- 大小：0.73 KB  
+- 最后修改：2025-05-28 15:10:24  
 
-```python
+```py
 from sqlalchemy import Column, BigInteger, Integer, DateTime, ForeignKey, String
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -887,12 +1109,14 @@ class CartItem(Base):
     user = relationship("User", back_populates="cart_items")
     product = relationship("Product", back_populates="cart_items")
 
-
 ```
 
-### category.py
+### `backend\mcpshop\models\category.py`
+- 行数：10 行  
+- 大小：0.37 KB  
+- 最后修改：2025-06-11 13:17:19  
 
-```python
+```py
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
 from mcpshop.db.base import Base
@@ -905,9 +1129,12 @@ class Category(Base):
     products = relationship("Product", back_populates="category")
 ```
 
-### conversation.py
+### `backend\mcpshop\models\conversation.py`
+- 行数：15 行  
+- 大小：0.68 KB  
+- 最后修改：2025-06-11 13:17:19  
 
-```python
+```py
 from sqlalchemy import Column, BigInteger, DateTime, String, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -923,12 +1150,14 @@ class Conversation(Base):
     user = relationship("User", back_populates="conversations")
     messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
 
-
 ```
 
-### message.py
+### `backend\mcpshop\models\message.py`
+- 行数：20 行  
+- 大小：0.73 KB  
+- 最后修改：2025-06-11 13:17:19  
 
-```python
+```py
 from sqlalchemy import Column, BigInteger, Text, DateTime, Enum as SQLEnum, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -951,9 +1180,12 @@ class Message(Base):
 
 ```
 
-### order.py
+### `backend\mcpshop\models\order.py`
+- 行数：23 行  
+- 大小：0.89 KB  
+- 最后修改：2025-06-11 13:17:19  
 
-```python
+```py
 from sqlalchemy import Column, BigInteger, DateTime, ForeignKey, Enum as SQLEnum
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -979,9 +1211,12 @@ class Order(Base):
 
 ```
 
-### order_item.py
+### `backend\mcpshop\models\order_item.py`
+- 行数：14 行  
+- 大小：0.65 KB  
+- 最后修改：2025-06-11 13:17:19  
 
-```python
+```py
 from sqlalchemy import Column, BigInteger, Integer, ForeignKey, String
 from sqlalchemy.orm import relationship
 from mcpshop.db.base import Base
@@ -998,9 +1233,12 @@ class OrderItem(Base):
     product = relationship("Product", back_populates="order_items")
 ```
 
-### product.py
+### `backend\mcpshop\models\product.py`
+- 行数：21 行  
+- 大小：0.99 KB  
+- 最后修改：2025-06-11 13:17:19  
 
-```python
+```py
 from sqlalchemy import Column, String, Integer, Text, DateTime, ForeignKey
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -1024,9 +1262,12 @@ class Product(Base):
 
 ```
 
-### user.py
+### `backend\mcpshop\models\user.py`
+- 行数：17 行  
+- 大小：0.91 KB  
+- 最后修改：2025-06-11 13:17:19  
 
-```python
+```py
 from sqlalchemy import Column, BigInteger, String, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -1046,17 +1287,14 @@ class User(Base):
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
 ```
 
-请继续发送下一个模块或服务层的代码文件，我会继续添加。
+### `backend\mcpshop\schemas\__init__.py`
+- 行数：11 行  
+- 大小：0.42 KB  
+- 最后修改：2025-05-28 15:19:29  
 
-------
+```py
+# app/schemas/__init__.py
 
-## schemas 模块
-
-目录： `mcpshop/schemas`
-
-### **init**.py
-
-```python
 # 统一导出，方便在路由里一次性 import
 from .user import UserCreate, UserOut
 from .auth import Token, TokenData
@@ -1065,11 +1303,15 @@ from .product import ProductCreate, ProductOut, ProductUpdate
 from .cart import CartItemCreate, CartItemOut
 from .order import OrderCreate, OrderOut, OrderItemOut
 from .chat import MessageIn, MessageOut, ConversationOut
+
 ```
 
-### auth.py
+### `backend\mcpshop\schemas\auth.py`
+- 行数：10 行  
+- 大小：0.19 KB  
+- 最后修改：2025-05-28 15:20:24  
 
-```python
+```py
 # app/schemas/auth.py
 from pydantic import BaseModel
 
@@ -1082,10 +1324,12 @@ class TokenData(BaseModel):
 
 ```
 
-### cart.py
+### `backend\mcpshop\schemas\cart.py`
+- 行数：21 行  
+- 大小：0.44 KB  
+- 最后修改：2025-05-28 15:21:27  
 
-```python
-# app/schemas/cart.py
+```py
 # app/schemas/cart.py
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -1109,9 +1353,12 @@ class CartItemOut(CartItemBase):
 
 ```
 
-### category.py
+### `backend\mcpshop\schemas\category.py`
+- 行数：15 行  
+- 大小：0.29 KB  
+- 最后修改：2025-05-28 15:20:45  
 
-```python
+```py
 # app/schemas/category.py
 from pydantic import BaseModel, Field
 
@@ -1127,12 +1374,14 @@ class CategoryOut(CategoryBase):
     class Config:
         orm_mode = True
 
-
 ```
 
-### chat.py
+### `backend\mcpshop\schemas\chat.py`
+- 行数：27 行  
+- 大小：0.53 KB  
+- 最后修改：2025-06-11 21:37:36  
 
-```python
+```py
 # app/schemas/chat.py
 from pydantic import BaseModel
 from datetime import datetime
@@ -1162,9 +1411,12 @@ class ChatRequest(BaseModel):
     text: str
 ```
 
-### order.py
+### `backend\mcpshop\schemas\order.py`
+- 行数：27 行  
+- 大小：0.53 KB  
+- 最后修改：2025-05-28 15:21:43  
 
-```python
+```py
 # app/schemas/order.py
 from pydantic import BaseModel
 from typing import List
@@ -1192,12 +1444,14 @@ class OrderOut(BaseModel):
     class Config:
         orm_mode = True
 
-
 ```
 
-### product.py
+### `backend\mcpshop\schemas\product.py`
+- 行数：32 行  
+- 大小：0.81 KB  
+- 最后修改：2025-05-28 15:21:06  
 
-```python
+```py
 # app/schemas/product.py
 from pydantic import BaseModel, Field, HttpUrl
 from datetime import datetime
@@ -1230,12 +1484,14 @@ class ProductOut(ProductBase):
     class Config:
         orm_mode = True
 
-
 ```
 
-### user.py
+### `backend\mcpshop\schemas\user.py`
+- 行数：19 行  
+- 大小：0.43 KB  
+- 最后修改：2025-05-28 15:19:53  
 
-```python
+```py
 # app/schemas/user.py
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
@@ -1255,271 +1511,48 @@ class UserOut(UserBase):
     class Config:
         orm_mode = True
 
+```
+
+### `backend\mcpshop\scripts\__init__.py`
+- 行数：1 行  
+- 大小：0.0 KB  
+- 最后修改：2025-06-11 23:54:35  
+
+```py
 
 ```
 
-请继续发送 services 模块或其他代码文件，我会继续添加。
+### `backend\mcpshop\scripts\mcp_server.py`
+- 行数：67 行  
+- 大小：2.27 KB  
+- 最后修改：2025-06-14 21:09:28  
 
-------
-
-## services 模块
-
-目录： `mcpshop/services`
-
-### mcp_client.py
-
-```python
-# mcpshop/services/mcp_client.py
-"""
-MCPClient  ——  智慧商城客户端 (Stdio + Function-Calling)
--------------------------------------------------------
-✦ 环境变量 (建议放 .env)               说明
-  ───────────────────────────────────────────────────────
-  OPENAI_API_KEY   OpenAI API Key（必填）
-  BASE_URL         OpenAI 代理 / 反向代理地址（可选）
-  MODEL            默认模型，如 gpt-4o-mini（可选，默认 gpt-4o-mini）
-"""
-
-import asyncio
-import json
-import os
-import sys
-from contextlib import AsyncExitStack
-from typing import Optional
-
-from dotenv import load_dotenv
-from mcp import ClientSession, StdioServerParameters
-from mcp.client.stdio import stdio_client
-from openai import OpenAI           # 同步 SDK，用 asyncio.to_thread 包装
-
-# ────────────────────────────────
-# 环境加载
-# ────────────────────────────────
-load_dotenv()                       # 读取 .env
-
-
-class MCPClient:
-    """对话客户端：负责
-    1. 启动 / 连接 MCP Server (Stdio)
-    2. 把可用工具列表交给 OpenAI 进行 Function-Calling
-    3. 若触发 tool_calls，则执行并把结果回传给模型
-    """
-
-    def __init__(self) -> None:
-        self.exit_stack = AsyncExitStack()
-
-        # ── OpenAI 配置 ────────────────────────────────────────────
-        self.openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
-        if not self.openai_api_key:
-            raise ValueError("❌ 未找到 OPENAI_API_KEY，请在 .env 中设置")
-
-        self.base_url: str | None = os.getenv("BASE_URL")  # 代理 / 反代
-        self.model: str = os.getenv("MODEL", "gpt-4o-mini")
-
-        # 同步客户端；后续用 asyncio.to_thread 调用避免阻塞事件循环
-        self.oa = OpenAI(api_key=self.openai_api_key, base_url=self.base_url)
-
-        # MCP 连接对象
-        self.session: Optional[ClientSession] = None
-        self.stdio = None            # read_stream
-        self.write = None            # write_stream (send)
-
-    # ──────────────────────────────────────────────────────────────
-    # 1) 连接 / 启动服务器
-    # ──────────────────────────────────────────────────────────────
-    async def connect_to_server(self, server_script_path: str) -> None:
-        """
-        启动（或连接）MCP 服务器脚本（.py / .js 均可）
-        """
-        ext = os.path.splitext(server_script_path)[1]
-        if ext not in {".py", ".js"}:
-            raise ValueError("服务器脚本必须是 .py 或 .js 文件!")
-
-        command = "python" if ext == ".py" else "node"
-        server_params = StdioServerParameters(
-            command=command,
-            args=[server_script_path],
-            env=None,                # 继承默认环境变量
-        )
-
-        # 启动子进程并建立 stdin/stdout 双流
-        self.stdio, self.write = await self.exit_stack.enter_async_context(
-            stdio_client(server_params)
-        )
-
-        # 创建 Session
-        self.session = await self.exit_stack.enter_async_context(
-            ClientSession(self.stdio, self.write)
-        )
-        await self.session.initialize()       # 握手
-
-        # 列出工具
-        tools_resp = await self.session.list_tools()
-        tool_names = [t.name for t in tools_resp.tools]
-        print("✅ 已连接 MCP 服务器，支持工具:", tool_names)
-
-    # ──────────────────────────────────────────────────────────────
-    # 2) 处理单轮查询
-    # ──────────────────────────────────────────────────────────────
-    async def process_query(self, query: str) -> str:
-        """
-        发给 OpenAI → 解析 tool_calls → 执行工具 → 二次回复
-        """
-        if self.session is None:
-            raise RuntimeError("❌ 未连接到服务器，请先调用 connect_to_server()")
-
-        # 基础对话历史（可扩展为存储上下文）
-        messages = [{"role": "user", "content": query}]
-
-        # ── ① 获取工具 schema 列表
-        list_resp = await self.session.list_tools()
-        available_tools = [
-            {
-                "type": "function",
-                "function": {
-                    "name": t.name,
-                    "description": t.description,
-                    "parameters": t.inputSchema,  # OpenAI 1.x 需用 parameters/key
-                },
-            }
-            for t in list_resp.tools
-        ]
-
-        # ── ② 第一次调用大模型（可能触发工具）
-        first_resp = await asyncio.to_thread(
-            self.oa.chat.completions.create,
-            model=self.model,
-            messages=messages,
-            tools=available_tools,
-        )
-        choice = first_resp.choices[0]
-
-        # 未触发工具
-        if choice.finish_reason != "tool_calls":
-            return choice.message.content
-
-        # ── ③ 若有 tool_calls，执行并回写
-        tool_call = choice.message.tool_calls[0]          # 演示只取第一个
-        tool_name = tool_call.function.name
-        tool_args = json.loads(tool_call.function.arguments)
-
-        # 执行工具
-        print(f"\n[Tool] → {tool_name} {tool_args}")
-        exec_result = await self.session.call_tool(tool_name, tool_args)
-
-        # 把执行结果加入对话
-        messages.append(choice.message.model_dump())
-        messages.append(
-            {
-                "role": "tool",
-                "tool_call_id": tool_call.id,             # 必需
-                "name": tool_name,
-                "content": json.dumps(exec_result.content),
-            }
-        )
-
-        # ── ④ 第二次让模型生成最终回复
-        second_resp = await asyncio.to_thread(
-            self.oa.chat.completions.create,
-            model=self.model,
-            messages=messages,
-        )
-        return second_resp.choices[0].message.content
-
-    # ──────────────────────────────────────────────────────────────
-    # 3) 命令行对话循环 (Demo)
-    # ──────────────────────────────────────────────────────────────
-    async def chat_loop(self) -> None:
-        """简单 CLI，输入 quit 退出"""
-        print("\n🤖 进入对话，输入 quit 退出。")
-        while True:
-            try:
-                user_in = input("\n你: ").strip()
-                if user_in.lower() == "quit":
-                    break
-                reply = await self.process_query(user_in)
-                print(f"\n🤖: {reply}")
-            except Exception as exc:
-                print(f"\n⚠️ 发生错误: {exc}")
-
-    # ──────────────────────────────────────────────────────────────
-    # 4) 资源清理
-    # ──────────────────────────────────────────────────────────────
-    async def cleanup(self) -> None:
-        """退出时关闭所有 async context"""
-        await self.exit_stack.aclose()
-
-
-# ──────────────────────────────────────────────────────────────────
-# CLI 入口：python -m mcpshop.services.mcp_client <path_to_server.py>
-# ──────────────────────────────────────────────────────────────────
-async def _main() -> None:
-    if len(sys.argv) < 2:
-        print("Usage: python -m mcpshop.services.mcp_client scripts/mcp_server.py")
-        sys.exit(1)
-
-    server_path = sys.argv[1]
-    client = MCPClient()
-
-    try:
-        await client.connect_to_server(server_path)
-        await client.chat_loop()
-    finally:
-        await client.cleanup()
-
-
-if __name__ == "__main__":
-    asyncio.run(_main())
-
-```
-
-## scripts 模块
-
-
-目录： `mcpshop/scripts`
-
-### mcp_server.py
-```python
+```py
 # scripts/mcp_server.py
-"""
-Smart-Store MCP Server  (FastMCP 版本)
--------------------------------------
-✦ 对外暴露三项能力
-   1. list_products        → 商品检索
-   2. add_to_cart          → 加入购物车
-   3. products_all (Resource) → 全量商品资源
 
-✦ 支持两种启动方式
-   • ASGI (默认)：      python scripts/mcp_server.py
-   • stdio（嵌入式）：  python scripts/mcp_server.py --stdio
-"""
-
-from typing import List
-import asyncio
+import os
 import argparse
-
-from mcp.server.fastmcp import FastMCP
+from dotenv import load_dotenv
+from fastmcp import FastMCP
 from mcpshop.crud import product as crud_product, cart as crud_cart
 from mcpshop.db.session import get_db
 
+# 1. 加载环境变量
+load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
+
+# 2. 创建 FastMCP 实例
 mcp = FastMCP("SmartStoreToolServer")
 
-# ---------- Tools -------------------------------------------------
+# 3. 注册工具 (Tool)
 @mcp.tool()
-async def list_products(q: str = "", top_k: int = 5) -> List[dict]:
+async def list_products(q: str = "", top_k: int = 5) -> list[dict]:
     """搜索商品（模糊匹配名称/描述）"""
     async with get_db() as db:
         items = await crud_product.search_products(db, q, top_k)
     return [
-        {
-            "sku": p.sku,
-            "name": p.name,
-            "price": p.price_cents / 100,
-            "stock": p.stock,
-        }
+        {"sku": p.sku, "name": p.name, "price": p.price_cents / 100, "stock": p.stock}
         for p in items
     ]
-
 
 @mcp.tool()
 async def add_to_cart(user_id: int, sku: str, qty: int = 1) -> dict:
@@ -1528,11 +1561,10 @@ async def add_to_cart(user_id: int, sku: str, qty: int = 1) -> dict:
         await crud_cart.add_to_cart(db, user_id, sku, qty)
     return {"ok": True}
 
-
-# ---------- Resource ----------------------------------------------
-@mcp.resource("products_all")
-async def products_all() -> List[dict]:
-    """暴露全量商品信息作为 Resource"""
+# 4. 注册 Resource（可选）
+@mcp.resource("mcpshop://products_all")
+async def products_all() -> list[dict]:
+    """全量商品列表资源"""
     async with get_db() as db:
         items = await crud_product.list_all_products(db)
     return [
@@ -1540,21 +1572,165 @@ async def products_all() -> List[dict]:
         for p in items
     ]
 
-
-# ---------- Run ----------------------------------------------------
+# 5. 启动入口
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--stdio", action="store_true", help="Serve via stdio")
-    parser.add_argument("--port", type=int, default=8001, help="HTTP port")
+    parser.add_argument("--stdio", action="store_true",
+                        help="启动 STDIO 嵌入式 模式")
+    parser.add_argument("--port", type=int, default=4200,
+                        help="HTTP 服务端口，默认 4200")
     args = parser.parse_args()
 
     if args.stdio:
-        # 嵌入到其他进程（如 MCPClient）时使用
+        # 嵌入式 STDIO 模式：供 stdio_client 使用
+        import asyncio
         asyncio.run(mcp.serve_stdio())
     else:
-        import uvicorn
-
-        # 独立进程运行，暴露 HTTP / WebSocket 接口
-        uvicorn.run(mcp.app, host="0.0.0.0", port=args.port)
+        # HTTP 模式：Streamable HTTP + SSE
+        mcp.run(
+            transport="streamable-http",
+            host="127.0.0.1",        # 或 "0.0.0.0" 开放到局域网
+            port=args.port,          # 默认 4200，也可通过 --port 指定
+            path="/mcp",             # 挂载前缀，接口在 /mcp/xxx 下
+            log_level="debug",       # 输出详细日志
+        )
 
 ```
+
+### `backend\mcpshop\services\mcp_client.py`
+- 行数：129 行  
+- 大小：4.17 KB  
+- 最后修改：2025-06-14 21:26:50  
+
+```py
+import os
+import sys
+import json
+import asyncio
+from dotenv import load_dotenv
+from fastmcp import Client
+from openai import OpenAI
+
+# 1. 载入 .env
+load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env")
+
+
+class MCPClient:
+    """基于 HTTP 的 MCP demo 客户端"""
+
+    def __init__(self, server_url: str):
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("❌ 请在 .env 中设置 OPENAI_API_KEY")
+
+        # OpenAI 同步 SDK（包装到线程池里）
+        self.oa = OpenAI(api_key=api_key, base_url=os.getenv("BASE_URL") or None)
+        self.model = os.getenv("MODEL", "deepseek-chat")
+
+        # fastmcp HTTP 客户端
+        self.client = Client(server_url)
+
+    # ------------------------- 核心逻辑 -------------------------
+
+    async def process_query(self, query: str) -> str:
+        """向 LLM 发送消息，必要时自动调用 MCP 工具"""
+        messages = [{"role": "user", "content": query}]
+
+        # ① 向服务器拉取全部工具 schema
+        tools = await self.client.list_tools()
+        func_schemas = [
+            {
+                "type": "function",
+                "function": {
+                    "name": tool.name,
+                    "description": tool.description,
+                    "parameters": getattr(tool, "inputSchema", getattr(tool, "input_schema", {})),
+                },
+            }
+            for tool in tools
+        ]
+
+        # ② 首轮推理（可能触发 tool_calls）
+        first = await asyncio.to_thread(
+            self.oa.chat.completions.create,
+            model=self.model,
+            messages=messages,
+            tools=func_schemas,
+        )
+        choice = first.choices[0]
+
+        # 无 tool_call：直接返回文本
+        if choice.finish_reason != "tool_calls":
+            return choice.message.content
+
+        # ③ 执行一次工具
+        tc = choice.message.tool_calls[0]
+        tool_name = tc.function.name
+        tool_args = json.loads(tc.function.arguments)
+        print(f"[调用工具] {tool_name} {tool_args}")
+
+        exec_res = await self.client.call_tool(tool_name, tool_args)
+
+        # fastmcp ≥0.4 直接返回原始结果；旧版返回带 .content 的对象
+        result_content = getattr(exec_res, "content", exec_res)
+
+        # ④ 把工具结果写回对话，再次推理
+        messages.append(choice.message.model_dump())
+        messages.append(
+            {
+                "role": "tool",
+                "tool_call_id": tc.id,
+                "name": tool_name,
+                # OpenAI 要求 string，所以先转 JSON 字符串
+                "content": json.dumps(result_content, ensure_ascii=False),
+            }
+        )
+
+        second = await asyncio.to_thread(
+            self.oa.chat.completions.create,
+            model=self.model,
+            messages=messages,
+        )
+        return second.choices[0].message.content
+
+    # ------------------------- CLI 对话循环 -------------------------
+
+    async def chat_loop(self):
+        print("🤖 进入对话（HTTP 模式），输入 quit 退出")
+        while True:
+            prompt = input("你: ").strip()
+            if prompt.lower() == "quit":
+                break
+            try:
+                resp = await self.process_query(prompt)
+                print("🤖:", resp)
+            except Exception as e:
+                print("⚠️ 出错:", e)
+
+    async def run(self):
+        async with self.client as client:
+            try:
+                await client.ping()
+                print("✅ MCP Server 握手成功，开始对话")
+            except Exception as e:
+                print("❌ 握手失败，请检查 URL 或服务状态：", e)
+                return
+            await self.chat_loop()
+
+
+# ------------------------- 入口 -------------------------
+
+async def _main():
+    if len(sys.argv) != 2:
+        print("用法: python -m mcpshop.services.mcp_client <http://host:port/mcp>")
+        sys.exit(1)
+    url = sys.argv[1]
+    client = MCPClient(url)
+    await client.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(_main())
+
+```
+

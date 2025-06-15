@@ -1,4 +1,4 @@
-# 项目代码快照（版本 v0.3.0，2025-06-15 17:39:29）
+# 项目代码快照（版本 v0.4.0，2025-06-15 18:14:04）
 
 ## 项目结构
 
@@ -131,8 +131,6 @@ __all__ = ["settings", "logger"]
 ```
 
 ### `backend\mcpshop\api\auth.py`
-> **⚡ 已更新** 生成于 `2025-06-15 17:39:29`
-
 - 行数：40 行  
 - 大小：1.58 KB  
 - 最后修改：2025-06-15 17:37:08  
@@ -1029,8 +1027,6 @@ async def get_db() -> AsyncSession:
 ```
 
 ### `backend\mcpshop\main.py`
-> **⚡ 已更新** 生成于 `2025-06-15 17:39:29`
-
 - 行数：48 行  
 - 大小：1.34 KB  
 - 最后修改：2025-06-15 17:37:08  
@@ -1543,8 +1539,6 @@ class UserOut(UserBase):
 ```
 
 ### `backend\mcpshop\scripts\mcp_server.py`
-> **⚡ 已更新** 生成于 `2025-06-15 17:39:29`
-
 - 行数：93 行  
 - 大小：3.11 KB  
 - 最后修改：2025-06-15 17:37:08  
@@ -1646,9 +1640,11 @@ if __name__ == "__main__":
 ```
 
 ### `backend\mcpshop\services\mcp_client.py`
-- 行数：141 行  
-- 大小：4.84 KB  
-- 最后修改：2025-06-15 16:38:11  
+> **⚡ 已更新** 生成于 `2025-06-15 18:14:04`
+
+- 行数：136 行  
+- 大小：4.92 KB  
+- 最后修改：2025-06-15 18:02:05  
 
 ```py
 import os
@@ -1661,7 +1657,6 @@ from openai import OpenAI
 
 # 强制加载并覆盖环境变量
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
-
 
 class MCPClient:
     """基于 fastmcp 的 CLI 客户端，所有返回数据用 LLM 过滤成 JSON"""
@@ -1676,11 +1671,6 @@ class MCPClient:
         # 解析模型，用于从文本中提取JSON
         self.parser_oa = OpenAI(api_key=api_key, base_url=os.getenv("BASE_URL") or None)
         self.parser_model = "deepseek-chat"
-
-        # 管理员 Token
-        self.admin_token = os.getenv("ADMIN_TOKEN") or ""
-        if not self.admin_token:
-            raise ValueError("请在 .env 中设置 ADMIN_TOKEN")
 
         self.client = Client(server_url.rstrip("/"))
 
@@ -1699,7 +1689,7 @@ class MCPClient:
         )
         return resp.choices[0].message.content.strip()
 
-    async def process_query(self, query: str) -> str:
+    async def process_query(self, query: str, user_token: str = "") -> str:
         # 1. 用户消息
         messages = [{"role": "user", "content": query}]
 
@@ -1729,8 +1719,9 @@ class MCPClient:
         tc = choice.message.tool_calls[0]
         tool_name = tc.function.name
         tool_args = json.loads(tc.function.arguments)
+        # 关键修正点：始终用当前用户token
         if tool_name == "add_product":
-            tool_args["token"] = self.admin_token  # 强制覆盖空值
+            tool_args["token"] = user_token  # 不再写死ADMIN_TOKEN
 
         print(f"[调用工具] {tool_name} {tool_args}")
         res = await self.client.call_tool(tool_name, tool_args)
@@ -1754,14 +1745,14 @@ class MCPClient:
 
         return clean_text
 
-    async def chat_loop(self):
+    async def chat_loop(self, user_token: str = ""):
         print("🤖 进入对话（HTTP 模式），输入 quit 退出")
         while True:
             prompt = input("你: ").strip()
             if prompt.lower() == "quit":
                 break
             try:
-                resp = await self.process_query(prompt)
+                resp = await self.process_query(prompt, user_token=user_token)
                 # 尝试解析 JSON
                 try:
                     j = json.loads(resp)
@@ -1771,7 +1762,7 @@ class MCPClient:
             except Exception as e:
                 print("⚠️ 出错:", e)
 
-    async def run(self):
+    async def run(self, user_token: str = ""):
         async with self.client:
             try:
                 await self.client.ping()
@@ -1779,15 +1770,15 @@ class MCPClient:
             except Exception as e:
                 print("❌ 无法连接 MCP Server：", e)
                 return
-            await self.chat_loop()
-
+            await self.chat_loop(user_token=user_token)
 
 async def _main():
-    if len(sys.argv) != 2:
-        print("用法: python -m mcpshop.services.mcp_client <http://host:port/mcp>")
+    if len(sys.argv) < 2:
+        print("用法: python -m mcpshop.services.mcp_client <http://host:port/mcp> [user_token]")
         sys.exit(1)
-    await MCPClient(sys.argv[1]).run()
-
+    server_url = sys.argv[1]
+    user_token = sys.argv[2] if len(sys.argv) > 2 else ""
+    await MCPClient(server_url).run(user_token=user_token)
 
 if __name__ == "__main__":
     asyncio.run(_main())

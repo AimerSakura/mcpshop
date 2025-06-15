@@ -42,5 +42,5 @@
   "backend\\mcpshop\\schemas\\user.py": "535c9acaa6d1d0fcb6ffc7e58660795d2e1658d0e3f4c30e7b5060bcad8c7e8d",
   "backend\\mcpshop\\scripts\\__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "backend\\mcpshop\\scripts\\mcp_server.py": "96f8808928c5ee430d1a8dc826d0655f44f65a26b8723447dd5e5dae47b39a56",
-  "backend\\mcpshop\\services\\mcp_client.py": "c19c856990395e3efd07a9ecaaad054eb793b8b7edc1385d9339302ec2934005"
+  "backend\\mcpshop\\services\\mcp_client.py": "fa75a48f1c90cfb86be8d5b6d34b34c68e387f09aadd341565b0c47576f50ccd"
 }

@@ -5,7 +5,7 @@ load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mcpshop.core.config import settings
-from mcpshop.api import auth, cart, chat, orders, products
+from mcpshop.api import auth, cart, chat, orders, products, users  # ★ 新增 users
 from mcpshop.db.session import engine
 from mcpshop.db.base import Base
 
@@ -32,6 +32,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router)
     app.include_router(orders.router)
     app.include_router(products.router)
+    app.include_router(users.router)  # ★ 新增注册 users 路由
 
     # --- 启动时自动建表（演示用，生产请用 Alembic） ---
     @app.on_event("startup")

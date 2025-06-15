@@ -1,4 +1,4 @@
-# 项目代码快照（版本 v0.4.0，2025-06-15 18:14:04）
+# 项目代码快照（版本 v0.5.0，2025-06-15 19:03:47）
 
 ## 项目结构
 
@@ -12,6 +12,7 @@
       - deps.py
       - orders.py
       - products.py
+      - users.py
     - core
       - __init__.py
       - config.py
@@ -66,6 +67,7 @@
 - [backend\mcpshop\api\deps.py](#backend\mcpshop\api\depspy)
 - [backend\mcpshop\api\orders.py](#backend\mcpshop\api\orderspy)
 - [backend\mcpshop\api\products.py](#backend\mcpshop\api\productspy)
+- [backend\mcpshop\api\users.py](#backend\mcpshop\api\userspy)
 - [backend\mcpshop\core\__init__.py](#backend\mcpshop\core\__init__py)
 - [backend\mcpshop\core\config.py](#backend\mcpshop\core\configpy)
 - [backend\mcpshop\core\embedding.py](#backend\mcpshop\core\embeddingpy)
@@ -366,9 +368,11 @@ async def get_current_admin_user(
 ```
 
 ### `backend\mcpshop\api\orders.py`
-- 行数：36 行  
-- 大小：1.21 KB  
-- 最后修改：2025-06-11 17:30:55  
+> **⚡ 已更新** 生成于 `2025-06-15 19:03:47`
+
+- 行数：41 行  
+- 大小：1.54 KB  
+- 最后修改：2025-06-15 18:28:23  
 
 ```py
 from typing import List
@@ -376,13 +380,15 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from mcpshop.db.session import get_db
-from mcpshop.crud.cart import get_cart_items, clear_cart  # ✅ 补齐缺失 import
+from mcpshop.crud.cart import get_cart_items, clear_cart
 from mcpshop.crud.order import create_order, get_orders_by_user
-from mcpshop.api.deps import get_current_user
+from mcpshop.api.deps import get_current_user, get_current_admin_user
 from mcpshop.schemas.order import OrderOut
+from mcpshop.models.order import Order
 
 router = APIRouter(prefix="/api/orders", tags=["orders"])
 
+# 普通用户下单
 @router.post("/", response_model=OrderOut)
 async def place_order(
     user = Depends(get_current_user),
@@ -391,15 +397,12 @@ async def place_order(
     items = await get_cart_items(db, user.user_id)
     if not items:
         raise HTTPException(status_code=400, detail="购物车为空")
-
-    # 构造订单明细
     details = [{"sku": i.sku, "quantity": i.quantity} for i in items]
     order = await create_order(db, user.user_id, details)
-
-    # 下单成功后清空购物车
     await clear_cart(db, user.user_id)
     return order
 
+# 普通用户查自己订单
 @router.get("/", response_model=List[OrderOut])
 async def list_orders(
     user = Depends(get_current_user),
@@ -407,12 +410,20 @@ async def list_orders(
 ):
     return await get_orders_by_user(db, user.user_id)
 
+# ★ 管理员查所有订单（管理员专属接口）
+@router.get("/all", response_model=List[OrderOut], dependencies=[Depends(get_current_admin_user)])
+async def list_all_orders(db: AsyncSession = Depends(get_db)):
+    result = await db.execute("SELECT * FROM orders")
+    return result.scalars().all()
+
 ```
 
 ### `backend\mcpshop\api\products.py`
-- 行数：61 行  
-- 大小：1.97 KB  
-- 最后修改：2025-06-11 16:59:02  
+> **⚡ 已更新** 生成于 `2025-06-15 19:03:47`
+
+- 行数：72 行  
+- 大小：2.38 KB  
+- 最后修改：2025-06-15 18:23:50  
 
 ```py
 from typing import List
@@ -423,17 +434,25 @@ from mcpshop.db.session import get_db
 from mcpshop.schemas.product import ProductCreate, ProductOut, ProductUpdate
 from mcpshop.crud.product import (
     create_product, get_product_by_sku, search_products,
-    )
+)
+
+# ★ 新增管理员依赖
+from mcpshop.api.deps import get_current_admin_user
 
 router = APIRouter(prefix="/api/products", tags=["products"])
 
-@router.post("/", response_model=ProductOut)
-async def create(p: ProductCreate, db: AsyncSession = Depends(get_db)):
+# ★ 管理员才能添加商品
+@router.post("/", response_model=ProductOut, dependencies=[Depends(get_current_admin_user)])
+async def create(
+    p: ProductCreate,
+    db: AsyncSession = Depends(get_db)
+):
     exists = await get_product_by_sku(db, p.sku)
     if exists:
         raise HTTPException(status_code=400, detail="SKU 已存在")
     return await create_product(db, p)
 
+# 所有人都能查看商品列表
 @router.get("/", response_model=List[ProductOut])
 async def list_products(
     q: str = Query("", description="搜索关键词"),
@@ -442,6 +461,7 @@ async def list_products(
 ):
     return await search_products(db, q, limit)
 
+# 所有人都能查商品详情
 @router.get("/{sku}", response_model=ProductOut)
 async def get_sku(
     sku: str, db: AsyncSession = Depends(get_db)
@@ -451,7 +471,8 @@ async def get_sku(
         raise HTTPException(status_code=404, detail="未找到商品")
     return prod
 
-@router.patch("/{sku}", response_model=ProductOut)
+# ★ 管理员才能修改商品
+@router.patch("/{sku}", response_model=ProductOut, dependencies=[Depends(get_current_admin_user)])
 async def update_sku(
     sku: str,
     p: ProductUpdate,
@@ -466,7 +487,8 @@ async def update_sku(
     await db.refresh(prod)
     return prod
 
-@router.delete("/{sku}", status_code=204)
+# ★ 管理员才能删除商品
+@router.delete("/{sku}", status_code=204, dependencies=[Depends(get_current_admin_user)])
 async def delete_sku(
     sku: str, db: AsyncSession = Depends(get_db)
 ):
@@ -474,6 +496,42 @@ async def delete_sku(
     if not prod:
         raise HTTPException(status_code=404, detail="未找到商品")
     await db.delete(prod)
+    await db.commit()
+
+```
+
+### `backend\mcpshop\api\users.py`
+> **⚡ 已更新** 生成于 `2025-06-15 19:03:47`
+
+- 行数：26 行  
+- 大小：1.06 KB  
+- 最后修改：2025-06-15 18:38:55  
+
+```py
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from mcpshop.db.session import get_db
+from mcpshop.crud.user import get_user_by_username
+from mcpshop.api.deps import get_current_admin_user
+from mcpshop.schemas.user import UserOut  # ★ 用Pydantic模型 UserOut
+
+router = APIRouter(prefix="/api/users", tags=["users"])
+
+# 管理员获取所有用户列表
+@router.get("/", response_model=List[UserOut], dependencies=[Depends(get_current_admin_user)])
+async def list_users(db: AsyncSession = Depends(get_db)):
+    result = await db.execute("SELECT * FROM users")
+    return result.scalars().all()
+
+# 管理员删除指定用户
+@router.delete("/{username}", status_code=204, dependencies=[Depends(get_current_admin_user)])
+async def delete_user(username: str, db: AsyncSession = Depends(get_db)):
+    user = await get_user_by_username(db, username)
+    if not user:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    await db.delete(user)
     await db.commit()
 
 ```
@@ -922,9 +980,11 @@ async def search_products(db: AsyncSession, q: str, limit: int = 20) -> List[Pro
 ```
 
 ### `backend\mcpshop\crud\user.py`
-- 行数：27 行  
-- 大小：1.0 KB  
-- 最后修改：2025-06-15 17:37:08  
+> **⚡ 已更新** 生成于 `2025-06-15 19:03:47`
+
+- 行数：38 行  
+- 大小：1.45 KB  
+- 最后修改：2025-06-15 18:55:12  
 
 ```py
 # app/crud/user.py
@@ -933,6 +993,8 @@ from sqlalchemy.future import select
 from mcpshop.models.user import User
 from mcpshop.core.security import get_password_hash, verify_password
 from mcpshop.schemas.user import UserCreate
+from sqlalchemy.exc import IntegrityError
+from fastapi import HTTPException
 
 async def get_user_by_username(db: AsyncSession, username: str) -> User | None:
     result = await db.execute(select(User).where(User.username == username))
@@ -945,15 +1007,24 @@ async def authenticate_user(db: AsyncSession, username: str, password: str) -> U
     return user
 
 async def create_user(db: AsyncSession, user_in: UserCreate) -> User:
-    user = User(
+    db_user = User(
         username=user_in.username,
         email=user_in.email,
         password_hash=get_password_hash(user_in.password)
     )
-    db.add(user)
-    await db.commit()
-    await db.refresh(user)
-    return user
+    db.add(db_user)
+    try:
+        await db.commit()
+        await db.refresh(db_user)
+        return db_user
+    except IntegrityError as e:
+        await db.rollback()
+        # 判断是否邮箱重复
+        if "ix_users_email" in str(e):
+            raise HTTPException(status_code=400, detail="邮箱已被注册")
+        if "ix_users_username" in str(e):
+            raise HTTPException(status_code=400, detail="用户名已存在")
+        raise
 ```
 
 ### `backend\mcpshop\db\__init__.py`
@@ -1027,9 +1098,11 @@ async def get_db() -> AsyncSession:
 ```
 
 ### `backend\mcpshop\main.py`
-- 行数：48 行  
-- 大小：1.34 KB  
-- 最后修改：2025-06-15 17:37:08  
+> **⚡ 已更新** 生成于 `2025-06-15 19:03:47`
+
+- 行数：49 行  
+- 大小：1.44 KB  
+- 最后修改：2025-06-15 18:26:58  
 
 ```py
 import os
@@ -1039,7 +1112,7 @@ load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from mcpshop.core.config import settings
-from mcpshop.api import auth, cart, chat, orders, products
+from mcpshop.api import auth, cart, chat, orders, products, users  # ★ 新增 users
 from mcpshop.db.session import engine
 from mcpshop.db.base import Base
 
@@ -1066,6 +1139,7 @@ def create_app() -> FastAPI:
     app.include_router(chat.router)
     app.include_router(orders.router)
     app.include_router(products.router)
+    app.include_router(users.router)  # ★ 新增注册 users 路由
 
     # --- 启动时自动建表（演示用，生产请用 Alembic） ---
     @app.on_event("startup")
@@ -1539,9 +1613,11 @@ class UserOut(UserBase):
 ```
 
 ### `backend\mcpshop\scripts\mcp_server.py`
-- 行数：93 行  
-- 大小：3.11 KB  
-- 最后修改：2025-06-15 17:37:08  
+> **⚡ 已更新** 生成于 `2025-06-15 19:03:47`
+
+- 行数：163 行  
+- 大小：5.91 KB  
+- 最后修改：2025-06-15 18:52:12  
 
 ```py
 import os
@@ -1556,7 +1632,9 @@ from mcpshop.core.security import decode_access_token
 from mcpshop.crud.user import get_user_by_username
 from sqlalchemy.exc import IntegrityError
 from jose import JWTError
-
+from sqlalchemy import text
+from sqlalchemy import select
+from mcpshop.models.user import User
 # 强制覆盖系统环境变量
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
 
@@ -1624,6 +1702,74 @@ async def add_product(
         except IntegrityError:
             return json.dumps({"error": f"SKU “{sku}” 已存在，请换一个。"}, ensure_ascii=False)
 
+#管理员工具：列全部用户
+@mcp.tool()
+async def list_users(token: str) -> str:
+    try:
+        username = decode_access_token(token)
+    except JWTError:
+        return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
+    async with AsyncSessionLocal() as db:
+        user = await get_user_by_username(db, username)
+        if not user or not user.is_admin:
+            return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
+        # ORM查询所有用户
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        return json.dumps([{
+            "user_id": u.user_id, "username": u.username, "email": u.email, "is_admin": u.is_admin
+        } for u in users], ensure_ascii=False)
+
+#管理员工具：删除用户
+@mcp.tool()
+async def delete_user(token: str, username: str) -> str:
+    # 校验管理员token
+    try:
+        admin_username = decode_access_token(token)
+    except JWTError:
+        return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
+
+    async with AsyncSessionLocal() as db:
+        admin_user = await get_user_by_username(db, admin_username)
+        if not admin_user or not admin_user.is_admin:
+            return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
+
+        # 不允许管理员删除自己
+        if admin_username == username:
+            return json.dumps({"error": "不能删除自己的管理员账号"}, ensure_ascii=False)
+
+        user = await get_user_by_username(db, username)
+        if not user:
+            return json.dumps({"error": "用户不存在"}, ensure_ascii=False)
+        await db.delete(user)
+        await db.commit()
+        return json.dumps({"ok": True, "deleted_user": username}, ensure_ascii=False)
+
+@mcp.tool()
+async def list_all_orders(token: str) -> str:
+    try:
+        username = decode_access_token(token)
+    except JWTError:
+        return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
+
+    async with AsyncSessionLocal() as db:
+        from mcpshop.crud.user import get_user_by_username
+        user = await get_user_by_username(db, username)
+        if not user or not user.is_admin:
+            return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
+
+        # 这里需要加text()
+        result = await db.execute(text("SELECT * FROM orders"))
+        orders = result.scalars().all()
+        return json.dumps([{
+            "order_id": o.order_id,
+            "user_id": o.user_id,
+            "total_cents": o.total_cents,
+            "status": o.status.value,
+            "created_at": str(o.created_at)
+        } for o in orders], ensure_ascii=False)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--port", type=int, default=8001)
@@ -1640,11 +1786,11 @@ if __name__ == "__main__":
 ```
 
 ### `backend\mcpshop\services\mcp_client.py`
-> **⚡ 已更新** 生成于 `2025-06-15 18:14:04`
+> **⚡ 已更新** 生成于 `2025-06-15 19:03:47`
 
-- 行数：136 行  
-- 大小：4.92 KB  
-- 最后修改：2025-06-15 18:02:05  
+- 行数：139 行  
+- 大小：4.87 KB  
+- 最后修改：2025-06-15 18:45:09  
 
 ```py
 import os
@@ -1657,6 +1803,7 @@ from openai import OpenAI
 
 # 强制加载并覆盖环境变量
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
+
 
 class MCPClient:
     """基于 fastmcp 的 CLI 客户端，所有返回数据用 LLM 过滤成 JSON"""
@@ -1719,15 +1866,15 @@ class MCPClient:
         tc = choice.message.tool_calls[0]
         tool_name = tc.function.name
         tool_args = json.loads(tc.function.arguments)
-        # 关键修正点：始终用当前用户token
-        if tool_name == "add_product":
-            tool_args["token"] = user_token  # 不再写死ADMIN_TOKEN
+
+        # ★★★ 自动补全所有需要token的工具 ★★★
+        if "token" in tool_args and not tool_args["token"]:
+            tool_args["token"] = user_token
 
         print(f"[调用工具] {tool_name} {tool_args}")
         res = await self.client.call_tool(tool_name, tool_args)
 
         # 5. 统一提取“文本结果”
-        # 支持：TextContent、ToolResponse、dict/list、纯 str
         if hasattr(res, "text"):
             # fastmcp 的 TextContent
             result_text = res.text
@@ -1772,6 +1919,7 @@ class MCPClient:
                 return
             await self.chat_loop(user_token=user_token)
 
+
 async def _main():
     if len(sys.argv) < 2:
         print("用法: python -m mcpshop.services.mcp_client <http://host:port/mcp> [user_token]")
@@ -1779,6 +1927,7 @@ async def _main():
     server_url = sys.argv[1]
     user_token = sys.argv[2] if len(sys.argv) > 2 else ""
     await MCPClient(server_url).run(user_token=user_token)
+
 
 if __name__ == "__main__":
     asyncio.run(_main())

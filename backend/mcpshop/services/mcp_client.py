@@ -9,6 +9,7 @@ from openai import OpenAI
 # 强制加载并覆盖环境变量
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
 
+
 class MCPClient:
     """基于 fastmcp 的 CLI 客户端，所有返回数据用 LLM 过滤成 JSON"""
 
@@ -70,15 +71,15 @@ class MCPClient:
         tc = choice.message.tool_calls[0]
         tool_name = tc.function.name
         tool_args = json.loads(tc.function.arguments)
-        # 关键修正点：始终用当前用户token
-        if tool_name == "add_product":
-            tool_args["token"] = user_token  # 不再写死ADMIN_TOKEN
+
+        # ★★★ 自动补全所有需要token的工具 ★★★
+        if "token" in tool_args and not tool_args["token"]:
+            tool_args["token"] = user_token
 
         print(f"[调用工具] {tool_name} {tool_args}")
         res = await self.client.call_tool(tool_name, tool_args)
 
         # 5. 统一提取“文本结果”
-        # 支持：TextContent、ToolResponse、dict/list、纯 str
         if hasattr(res, "text"):
             # fastmcp 的 TextContent
             result_text = res.text
@@ -123,6 +124,7 @@ class MCPClient:
                 return
             await self.chat_loop(user_token=user_token)
 
+
 async def _main():
     if len(sys.argv) < 2:
         print("用法: python -m mcpshop.services.mcp_client <http://host:port/mcp> [user_token]")
@@ -130,6 +132,7 @@ async def _main():
     server_url = sys.argv[1]
     user_token = sys.argv[2] if len(sys.argv) > 2 else ""
     await MCPClient(server_url).run(user_token=user_token)
+
 
 if __name__ == "__main__":
     asyncio.run(_main())

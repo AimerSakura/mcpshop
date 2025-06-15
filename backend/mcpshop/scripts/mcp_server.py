@@ -10,7 +10,9 @@ from mcpshop.core.security import decode_access_token
 from mcpshop.crud.user import get_user_by_username
 from sqlalchemy.exc import IntegrityError
 from jose import JWTError
-
+from sqlalchemy import text
+from sqlalchemy import select
+from mcpshop.models.user import User
 # 强制覆盖系统环境变量
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
 
@@ -77,6 +79,74 @@ async def add_product(
             return json.dumps({"ok": True, "product": payload}, ensure_ascii=False)
         except IntegrityError:
             return json.dumps({"error": f"SKU “{sku}” 已存在，请换一个。"}, ensure_ascii=False)
+
+#管理员工具：列全部用户
+@mcp.tool()
+async def list_users(token: str) -> str:
+    try:
+        username = decode_access_token(token)
+    except JWTError:
+        return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
+    async with AsyncSessionLocal() as db:
+        user = await get_user_by_username(db, username)
+        if not user or not user.is_admin:
+            return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
+        # ORM查询所有用户
+        result = await db.execute(select(User))
+        users = result.scalars().all()
+        return json.dumps([{
+            "user_id": u.user_id, "username": u.username, "email": u.email, "is_admin": u.is_admin
+        } for u in users], ensure_ascii=False)
+
+#管理员工具：删除用户
+@mcp.tool()
+async def delete_user(token: str, username: str) -> str:
+    # 校验管理员token
+    try:
+        admin_username = decode_access_token(token)
+    except JWTError:
+        return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
+
+    async with AsyncSessionLocal() as db:
+        admin_user = await get_user_by_username(db, admin_username)
+        if not admin_user or not admin_user.is_admin:
+            return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
+
+        # 不允许管理员删除自己
+        if admin_username == username:
+            return json.dumps({"error": "不能删除自己的管理员账号"}, ensure_ascii=False)
+
+        user = await get_user_by_username(db, username)
+        if not user:
+            return json.dumps({"error": "用户不存在"}, ensure_ascii=False)
+        await db.delete(user)
+        await db.commit()
+        return json.dumps({"ok": True, "deleted_user": username}, ensure_ascii=False)
+
+@mcp.tool()
+async def list_all_orders(token: str) -> str:
+    try:
+        username = decode_access_token(token)
+    except JWTError:
+        return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
+
+    async with AsyncSessionLocal() as db:
+        from mcpshop.crud.user import get_user_by_username
+        user = await get_user_by_username(db, username)
+        if not user or not user.is_admin:
+            return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
+
+        # 这里需要加text()
+        result = await db.execute(text("SELECT * FROM orders"))
+        orders = result.scalars().all()
+        return json.dumps([{
+            "order_id": o.order_id,
+            "user_id": o.user_id,
+            "total_cents": o.total_cents,
+            "status": o.status.value,
+            "created_at": str(o.created_at)
+        } for o in orders], ensure_ascii=False)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

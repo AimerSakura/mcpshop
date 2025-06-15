@@ -1,4 +1,4 @@
-# 项目代码快照（版本 v0.1.0，2025-06-14 22:05:36）
+# 项目代码快照（版本 v0.2.0，2025-06-15 17:09:17）
 
 ## 项目结构
 
@@ -131,50 +131,51 @@ __all__ = ["settings", "logger"]
 ```
 
 ### `backend\mcpshop\api\auth.py`
-- 行数：40 行  
-- 大小：1.58 KB  
-- 最后修改：2025-06-11 17:35:46  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：39 行  
+- 大小：1.42 KB  
+- 最后修改：2025-06-15 17:06:20  
 
 ```py
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
+# 文件：backend/mcpshop/api/auth.py
+
+import os
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
-from mcpshop.db.session import get_db
-from mcpshop.crud.user import authenticate_user, create_user, get_user_by_username
-from mcpshop.core.security import create_access_token
-from mcpshop.schemas.auth import Token
-from mcpshop.schemas.user import UserCreate, UserOut
+from pydantic import BaseModel
+from jose import JWTError, jwt
+from datetime import datetime, timedelta
+from mcpshop.crud.user import get_user_by_username
+from mcpshop.db.session import AsyncSessionLocal
 
-router = APIRouter(prefix="/api/auth", tags=["auth"])
+# 获取配置
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key")
+ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
-@router.post("/register", response_model=UserOut)
-async def register(
-    user_in: UserCreate,
-    db: AsyncSession = Depends(get_db)
-):
-    # ✅ 直接检查用户名 / 邮箱重复，不再调用 authenticate_user
-    if await get_user_by_username(db, user_in.username):
-        raise HTTPException(status_code=400, detail="用户名已存在")
-    # 如有邮箱唯一约束，也可并行检查:
-    # if await get_user_by_email(db, user_in.email): ...
+router = APIRouter()
 
-    return await create_user(db, user_in)
+class UserLogin(BaseModel):
+    username: str
+    password: str
 
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + expires_delta
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
-@router.post("/token", response_model=Token)
-async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
-):
-    user = await authenticate_user(db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="用户名或密码错误",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token = create_access_token(subject=user.username)
-    return {"access_token": access_token, "token_type": "bearer"}
+@router.post("/token")
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    # 这里处理用户名和密码的验证逻辑
+    if form_data.username == "normal" and form_data.password == "123456":
+        # 创建 JWT Token
+        access_token = create_access_token(data={"sub": form_data.username})
+        return {"access_token": access_token, "token_type": "bearer"}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
 ```
 
@@ -228,37 +229,52 @@ async def clear_user_cart(
 ```
 
 ### `backend\mcpshop\api\chat.py`
-- 行数：73 行  
-- 大小：2.48 KB  
-- 最后修改：2025-06-11 21:36:12  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：78 行  
+- 大小：2.54 KB  
+- 最后修改：2025-06-14 22:49:17  
 
 ```py
-# mcpshop/api/chat.py
+# backend/mcpshop/api/chat.py
+
+import os
 from pathlib import Path
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from dotenv import load_dotenv
 
-from mcpshop.api.deps import get_current_user, get_db
-from mcpshop.schemas.chat import ChatRequest        # ← 按你原来的位置调整
+from mcpshop.api.deps      import get_current_user
+from mcpshop.db.session    import get_db
+from mcpshop.schemas.chat  import ChatRequest
 from mcpshop.services.mcp_client import MCPClient
-from mcpshop.crud.cart import get_cart_items        # add_to_cart 已在 Tool 里做了，这里只读
+from mcpshop.crud.cart     import get_cart_items
+
+# 1. 加载环境变量并读取 MCP 服务地址
+load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
+MCP_API_URL = os.getenv("MCP_API_URL", "http://127.0.0.1:8000/mcp")
 
 router = APIRouter()
 
 # ------------------------------------------------------------------
 # 共用一个 MCPClient；首次使用时再启动/连接本地 MCP Server
 # ------------------------------------------------------------------
-_ai = MCPClient()
-_SERVER_SCRIPT = str(Path(__file__).resolve().parents[2] / "scripts/mcp_server.py")
+_ai = MCPClient(MCP_API_URL)   # ← 这里传入 server_url，就不会再报错了
 
+_SERVER_SCRIPT = str(
+    Path(__file__)
+    .resolve()
+    .parents[2]  # 回到项目根/backend/mcpshop/scripts
+    / "scripts"
+    / "mcp_server.py"
+)
 
 async def _ensure_ai_ready() -> None:
-    if _ai.session is None:                         # 尚未连接
+    if _ai.session is None:
         await _ai.connect_to_server(_SERVER_SCRIPT)
 
-
 # ------------------------------------------------------------------
-# 1)  REST 端点：POST /api/chat
+# 1) REST 端点：POST /api/chat
 # ------------------------------------------------------------------
 @router.post("/api/chat", summary="REST 对话接口")
 async def chat_endpoint(
@@ -266,16 +282,15 @@ async def chat_endpoint(
     current=Depends(get_current_user),
 ):
     """
-    请求体： {"text": "..."}
-    返回：   {"reply": "...", "actions":[...]}
+    请求体： {"text": "."}
+    返回：   {"reply": ".", "actions":[.]}
     """
     await _ensure_ai_ready()
-    result = await _ai.process_query(req.text)      # 无需 user_id 时直接发文本
+    result = await _ai.process_query(req.text)
     return result
 
-
 # ------------------------------------------------------------------
-# 2)  WebSocket：/api/chat
+# 2) WebSocket：/api/chat
 # ------------------------------------------------------------------
 @router.websocket("/api/chat")
 async def websocket_chat(
@@ -289,60 +304,70 @@ async def websocket_chat(
     try:
         while True:
             text = await ws.receive_text()
-
-            # 调大模型
             result = await _ai.process_query(text)
-
-            # （可选）根据动作刷新购物车；Tool 已经写库，这里只查询展示
             cart_items = await get_cart_items(db, user.user_id)
-
-            await ws.send_json(
-                {
-                    "reply": result["reply"],
-                    "actions": result.get("actions", []),
-                    "cart": cart_items,
-                }
-            )
+            await ws.send_json({
+                "reply": result["reply"],
+                "actions": result.get("actions", []),
+                "cart": cart_items,
+            })
     except WebSocketDisconnect:
         pass
 
 ```
 
 ### `backend\mcpshop\api\deps.py`
-- 行数：29 行  
-- 大小：0.96 KB  
-- 最后修改：2025-06-11 16:59:02  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：44 行  
+- 大小：1.38 KB  
+- 最后修改：2025-06-14 22:34:33  
 
 ```py
+# 文件：backend/mcpshop/api/deps.py
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from mcpshop.core.config import settings
 from mcpshop.core.security import decode_access_token
-from mcpshop.db.session import get_db
-from mcpshop.crud.user import get_user_by_username
+from mcpshop.db.session        import get_db
+from mcpshop.crud.user         import get_user_by_username
+from mcpshop.models.user       import User
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: AsyncSession = Depends(get_db)
-):
+    db:    AsyncSession = Depends(get_db)
+) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="认证失败",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        username: str = decode_access_token(token)
+        username = decode_access_token(token)
     except JWTError:
         raise credentials_exception
     user = await get_user_by_username(db, username)
     if not user:
         raise credentials_exception
     return user
+
+async def get_current_admin_user(
+    current: User = Depends(get_current_user),
+) -> User:
+    """
+    仅允许 is_admin=True 的用户继续，其他返回 403。
+    """
+    if not current.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="管理员权限不足"
+        )
+    return current
+
 ```
 
 ### `backend\mcpshop\api\orders.py`
@@ -968,41 +993,40 @@ Base = declarative_base()
 ```
 
 ### `backend\mcpshop\db\session.py`
-- 行数：34 行  
-- 大小：1.15 KB  
-- 最后修改：2025-06-14 21:21:41  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：31 行  
+- 大小：0.79 KB  
+- 最后修改：2025-06-14 22:57:17  
 
 ```py
-# mcpshop/db/session.py
+# backend/mcpshop/db/session.py
 
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from mcpshop.core.config import settings
-from contextlib import asynccontextmanager
+
 # 1. 创建异步引擎
 engine = create_async_engine(
-    settings.DATABASE_URL,  # 格式示例：mysql+asyncmy://user:pass@host:3306/dbname
-    echo=True,  # 是否打印 SQL 到控制台，开发时可开，生产可关
-    future=True  # 使用 2.0 风格 API
+    settings.DATABASE_URL,
+    echo=True,
+    future=True,
 )
 
-# 2. 创建 sessionmaker，用于产生 AsyncSession
+# 2. 创建 sessionmaker
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
-    expire_on_commit=False  # 提交后不 expire 对象，便于后续访问属性
+    expire_on_commit=False,
 )
 
-
-# 3. 依赖注入函数：在 FastAPI 路由中使用 Depends(get_db)
-@asynccontextmanager
+# 3. 依赖函数：直接 yield AsyncSession
 async def get_db() -> AsyncSession:
     """
     Yield 一个 AsyncSession，并在使用完后自动关闭连接。
-    用法示例：
-        @router.get("/")
-        async def read_items(db: AsyncSession = Depends(get_db)):
-            result = await db.execute(...)
+    用法：
+        async def endpoint(db: AsyncSession = Depends(get_db)):
+            await db.execute(...)
     """
     async with AsyncSessionLocal() as session:
         yield session
@@ -1010,27 +1034,19 @@ async def get_db() -> AsyncSession:
 ```
 
 ### `backend\mcpshop\main.py`
-- 行数：54 行  
-- 大小：1.63 KB  
-- 最后修改：2025-06-14 20:29:07  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：45 行  
+- 大小：1.24 KB  
+- 最后修改：2025-06-15 17:06:34  
 
 ```py
-# mcpshop/main.py
-import os
-from dotenv import load_dotenv
-load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
+# 文件：backend/mcpshop/main.py
 
-# # 验证环境变量是否正确加载
-# print("DATABASE_URL:", os.getenv("DATABASE_URL"))
-# print("REDIS_URL:", os.getenv("REDIS_URL"))
-# print("JWT_SECRET_KEY:", os.getenv("JWT_SECRET_KEY"))
-# print("MCP_API_URL:", os.getenv("MCP_API_URL"))
-# print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))
-from typing import List
 from fastapi import FastAPI
+from mcpshop.api import auth, cart, chat, orders, products
 from fastapi.middleware.cors import CORSMiddleware
 from mcpshop.core.config import settings
-from mcpshop.api import auth, cart, chat, orders, products
 from mcpshop.db.session import engine
 from mcpshop.db.base import Base
 import uvicorn
@@ -1040,7 +1056,8 @@ def create_app() -> FastAPI:
         title=settings.PROJECT_NAME,
         version=settings.VERSION
     )
-    # CORS
+
+    # --- CORS 配置 ---
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -1049,16 +1066,16 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 路由
-    app.include_router(auth.router)
+    # --- 注册各个路由 ---
+    app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
     app.include_router(cart.router)
     app.include_router(chat.router)
     app.include_router(orders.router)
     app.include_router(products.router)
 
+    # --- 启动时自动建表 ---
     @app.on_event("startup")
     async def on_startup() -> None:
-        # **开发演示**：直接创建表。生产请换成 Alembic 迁移。
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
@@ -1263,12 +1280,15 @@ class Product(Base):
 ```
 
 ### `backend\mcpshop\models\user.py`
-- 行数：17 行  
-- 大小：0.91 KB  
-- 最后修改：2025-06-11 13:17:19  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：21 行  
+- 大小：1.11 KB  
+- 最后修改：2025-06-14 22:34:12  
 
 ```py
-from sqlalchemy import Column, BigInteger, String, DateTime
+# 文件：backend/mcpshop/models/user.py
+from sqlalchemy import Column, BigInteger, String, DateTime, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from mcpshop.db.base import Base
@@ -1279,12 +1299,15 @@ class User(Base):
     username = Column(String(50), unique=True, index=True, nullable=False)
     email = Column(String(100), unique=True, index=True, nullable=False)
     password_hash = Column(String(128), nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    # —— 新增管理员标识字段 ——
+    is_admin = Column(Boolean, nullable=False, server_default="false")
+    created_at  = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at  = Column(DateTime(timezone=True), onupdate=func.now())
 
-    cart_items = relationship("CartItem", back_populates="user", cascade="all, delete-orphan")
-    orders = relationship("Order", back_populates="user", cascade="all, delete-orphan")
-    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
+    cart_items    = relationship("CartItem",      back_populates="user", cascade="all, delete-orphan")
+    orders        = relationship("Order",         back_populates="user", cascade="all, delete-orphan")
+    conversations = relationship("Conversation",  back_populates="user", cascade="all, delete-orphan")
+
 ```
 
 ### `backend\mcpshop\schemas\__init__.py`
@@ -1487,29 +1510,32 @@ class ProductOut(ProductBase):
 ```
 
 ### `backend\mcpshop\schemas\user.py`
-- 行数：19 行  
-- 大小：0.43 KB  
-- 最后修改：2025-05-28 15:19:53  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：20 行  
+- 大小：0.65 KB  
+- 最后修改：2025-06-14 23:17:34  
 
 ```py
-# app/schemas/user.py
+# 文件：backend/mcpshop/schemas/user.py
 from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
-
+from typing import Optional
 class UserBase(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
-    email: EmailStr
+    username: str    = Field(..., min_length=3, max_length=50)
+    email:    EmailStr
 
 class UserCreate(UserBase):
-    password: str = Field(..., min_length=6)
+    password: str    = Field(..., min_length=6)
 
 class UserOut(UserBase):
-    user_id: int
+    user_id:    int
+    is_admin:   bool              # —— 新增字段 ——
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True     # V2 中替代 orm_mode；原来写法见 :contentReference[oaicite:1]{index=1}
 
 ```
 
@@ -1523,84 +1549,100 @@ class UserOut(UserBase):
 ```
 
 ### `backend\mcpshop\scripts\mcp_server.py`
-- 行数：67 行  
-- 大小：2.27 KB  
-- 最后修改：2025-06-14 21:09:28  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：79 行  
+- 大小：2.92 KB  
+- 最后修改：2025-06-15 16:58:29  
 
 ```py
-# scripts/mcp_server.py
-
+import json
 import os
-import argparse
-from dotenv import load_dotenv
 from fastmcp import FastMCP
-from mcpshop.crud import product as crud_product, cart as crud_cart
-from mcpshop.db.session import get_db
+from mcpshop.db.session import AsyncSessionLocal
+from mcpshop.crud import product as crud_product
+from mcpshop.schemas.product import ProductCreate
+from mcpshop.core.security import decode_access_token
+from mcpshop.crud.user import get_user_by_username
+from sqlalchemy.exc import IntegrityError
+from dotenv import load_dotenv, set_key
 
-# 1. 加载环境变量
-load_dotenv(dotenv_path=r"C:\CodeProject\Pycharm\MCPshop\.env")
+# 加载环境变量
+load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
 
-# 2. 创建 FastMCP 实例
+# MCP 实例
 mcp = FastMCP("SmartStoreToolServer")
 
-# 3. 注册工具 (Tool)
+# 工具：添加商品
 @mcp.tool()
-async def list_products(q: str = "", top_k: int = 5) -> list[dict]:
-    """搜索商品（模糊匹配名称/描述）"""
-    async with get_db() as db:
-        items = await crud_product.search_products(db, q, top_k)
-    return [
-        {"sku": p.sku, "name": p.name, "price": p.price_cents / 100, "stock": p.stock}
-        for p in items
-    ]
+async def add_product(
+    token: str,
+    sku: str, name: str,
+    price_cents: int, stock: int,
+    description: str = "", image_url: str | None = None, category_id: int | None = None
+) -> str:
+    # 获取环境变量中的 token
+    common_token = os.getenv("COMMON_TOKEN", "")
+    admin_token = os.getenv("ADMIN_TOKEN", "")
 
-@mcp.tool()
-async def add_to_cart(user_id: int, sku: str, qty: int = 1) -> dict:
-    """把指定 SKU 加入用户购物车"""
-    async with get_db() as db:
-        await crud_cart.add_to_cart(db, user_id, sku, qty)
-    return {"ok": True}
+    # 验证 Token 是否有效
+    try:
+        username = decode_access_token(token)
+    except Exception as e:
+        return json.dumps({"error": str(e)}, ensure_ascii=False)
 
-# 4. 注册 Resource（可选）
-@mcp.resource("mcpshop://products_all")
-async def products_all() -> list[dict]:
-    """全量商品列表资源"""
-    async with get_db() as db:
-        items = await crud_product.list_all_products(db)
-    return [
-        {"sku": p.sku, "name": p.name, "price": p.price_cents / 100}
-        for p in items
-    ]
+    async with AsyncSessionLocal() as db:
+        # 根据 token 获取用户信息
+        user = await get_user_by_username(db, username)
 
-# 5. 启动入口
+        if not user:
+            return json.dumps({"error": "用户不存在"}, ensure_ascii=False)
+
+        # 验证 token 是否为有效 token
+        if token != common_token:
+            return json.dumps({"error": "无效的 Common_TOKEN"}, ensure_ascii=False)
+
+        # 如果是管理员登录，检查 ADMIN_TOKEN
+        if user.is_admin and token == admin_token:
+            # 执行添加商品操作
+            try:
+                prod = await crud_product.create_product(
+                    db,
+                    ProductCreate(
+                        sku=sku, name=name,
+                        price_cents=price_cents, stock=stock,
+                        description=description,
+                        image_url=image_url,
+                        category_id=category_id
+                    )
+                )
+                payload = {
+                    "sku": prod.sku,
+                    "name": prod.name,
+                    "price": prod.price_cents / 100,
+                    "stock": prod.stock,
+                    "description": prod.description,
+                    "image_url": prod.image_url,
+                    "category_id": prod.category_id,
+                }
+                return json.dumps({"ok": True, "product": payload}, ensure_ascii=False)
+            except IntegrityError:
+                return json.dumps({"error": f"SKU {sku} 已存在，请换一个。"}, ensure_ascii=False)
+        else:
+            # 普通用户操作，返回错误
+            return json.dumps({"error": "你没有权限执行此操作"}, ensure_ascii=False)
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--stdio", action="store_true",
-                        help="启动 STDIO 嵌入式 模式")
-    parser.add_argument("--port", type=int, default=4200,
-                        help="HTTP 服务端口，默认 4200")
-    args = parser.parse_args()
-
-    if args.stdio:
-        # 嵌入式 STDIO 模式：供 stdio_client 使用
-        import asyncio
-        asyncio.run(mcp.serve_stdio())
-    else:
-        # HTTP 模式：Streamable HTTP + SSE
-        mcp.run(
-            transport="streamable-http",
-            host="127.0.0.1",        # 或 "0.0.0.0" 开放到局域网
-            port=args.port,          # 默认 4200，也可通过 --port 指定
-            path="/mcp",             # 挂载前缀，接口在 /mcp/xxx 下
-            log_level="debug",       # 输出详细日志
-        )
+    mcp.run(transport="streamable-http", host="127.0.0.1", port=8001)
 
 ```
 
 ### `backend\mcpshop\services\mcp_client.py`
-- 行数：129 行  
-- 大小：4.17 KB  
-- 最后修改：2025-06-14 21:26:50  
+> **⚡ 已更新** 生成于 `2025-06-15 17:09:17`
+
+- 行数：141 行  
+- 大小：4.84 KB  
+- 最后修改：2025-06-15 16:38:11  
 
 ```py
 import os
@@ -1611,46 +1653,62 @@ from dotenv import load_dotenv
 from fastmcp import Client
 from openai import OpenAI
 
-# 1. 载入 .env
-load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env")
+# 强制加载并覆盖环境变量
+load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
 
 
 class MCPClient:
-    """基于 HTTP 的 MCP demo 客户端"""
+    """基于 fastmcp 的 CLI 客户端，所有返回数据用 LLM 过滤成 JSON"""
 
     def __init__(self, server_url: str):
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
-            raise ValueError("❌ 请在 .env 中设置 OPENAI_API_KEY")
-
-        # OpenAI 同步 SDK（包装到线程池里）
+            raise ValueError("请在 .env 中设置 OPENAI_API_KEY")
         self.oa = OpenAI(api_key=api_key, base_url=os.getenv("BASE_URL") or None)
         self.model = os.getenv("MODEL", "deepseek-chat")
 
-        # fastmcp HTTP 客户端
-        self.client = Client(server_url)
+        # 解析模型，用于从文本中提取JSON
+        self.parser_oa = OpenAI(api_key=api_key, base_url=os.getenv("BASE_URL") or None)
+        self.parser_model = "deepseek-chat"
 
-    # ------------------------- 核心逻辑 -------------------------
+        # 管理员 Token
+        self.admin_token = os.getenv("ADMIN_TOKEN") or ""
+        if not self.admin_token:
+            raise ValueError("请在 .env 中设置 ADMIN_TOKEN")
+
+        self.client = Client(server_url.rstrip("/"))
+
+    async def _extract_json(self, text: str) -> str:
+        """
+        用 GPT-4 从文本中提取严格的 JSON 对象并返回。
+        """
+        messages = [
+            {"role": "system", "content": "你是一个 JSON 提取器，只输出严格的 JSON，不要额外解释。"},
+            {"role": "user", "content": f"请从下面内容中提取 JSON：\n```\n{text}\n```"}
+        ]
+        resp = await asyncio.to_thread(
+            self.parser_oa.chat.completions.create,
+            model=self.parser_model,
+            messages=messages
+        )
+        return resp.choices[0].message.content.strip()
 
     async def process_query(self, query: str) -> str:
-        """向 LLM 发送消息，必要时自动调用 MCP 工具"""
+        # 1. 用户消息
         messages = [{"role": "user", "content": query}]
 
-        # ① 向服务器拉取全部工具 schema
+        # 2. 拉取工具 schema
         tools = await self.client.list_tools()
-        func_schemas = [
-            {
-                "type": "function",
-                "function": {
-                    "name": tool.name,
-                    "description": tool.description,
-                    "parameters": getattr(tool, "inputSchema", getattr(tool, "input_schema", {})),
-                },
+        func_schemas = [{
+            "type": "function",
+            "function": {
+                "name": t.name,
+                "description": t.description,
+                "parameters": getattr(t, "inputSchema", getattr(t, "input_schema", {})),
             }
-            for tool in tools
-        ]
+        } for t in tools]
 
-        # ② 首轮推理（可能触发 tool_calls）
+        # 3. 首轮推理
         first = await asyncio.to_thread(
             self.oa.chat.completions.create,
             model=self.model,
@@ -1658,42 +1716,37 @@ class MCPClient:
             tools=func_schemas,
         )
         choice = first.choices[0]
-
-        # 无 tool_call：直接返回文本
         if choice.finish_reason != "tool_calls":
             return choice.message.content
 
-        # ③ 执行一次工具
+        # 4. 执行工具
         tc = choice.message.tool_calls[0]
         tool_name = tc.function.name
         tool_args = json.loads(tc.function.arguments)
+        if tool_name == "add_product":
+            tool_args["token"] = self.admin_token  # 强制覆盖空值
+
         print(f"[调用工具] {tool_name} {tool_args}")
+        res = await self.client.call_tool(tool_name, tool_args)
 
-        exec_res = await self.client.call_tool(tool_name, tool_args)
+        # 5. 统一提取“文本结果”
+        # 支持：TextContent、ToolResponse、dict/list、纯 str
+        if hasattr(res, "text"):
+            # fastmcp 的 TextContent
+            result_text = res.text
+        elif hasattr(res, "content"):
+            content = res.content
+            if isinstance(content, (dict, list)):
+                result_text = json.dumps(content, ensure_ascii=False)
+            else:
+                result_text = str(content)
+        else:
+            result_text = str(res)
 
-        # fastmcp ≥0.4 直接返回原始结果；旧版返回带 .content 的对象
-        result_content = getattr(exec_res, "content", exec_res)
+        # 6. 用 GPT-4 清洗 JSON
+        clean_text = await self._extract_json(result_text)
 
-        # ④ 把工具结果写回对话，再次推理
-        messages.append(choice.message.model_dump())
-        messages.append(
-            {
-                "role": "tool",
-                "tool_call_id": tc.id,
-                "name": tool_name,
-                # OpenAI 要求 string，所以先转 JSON 字符串
-                "content": json.dumps(result_content, ensure_ascii=False),
-            }
-        )
-
-        second = await asyncio.to_thread(
-            self.oa.chat.completions.create,
-            model=self.model,
-            messages=messages,
-        )
-        return second.choices[0].message.content
-
-    # ------------------------- CLI 对话循环 -------------------------
+        return clean_text
 
     async def chat_loop(self):
         print("🤖 进入对话（HTTP 模式），输入 quit 退出")
@@ -1703,30 +1756,31 @@ class MCPClient:
                 break
             try:
                 resp = await self.process_query(prompt)
-                print("🤖:", resp)
+                # 尝试解析 JSON
+                try:
+                    j = json.loads(resp)
+                    print("🤖", json.dumps(j, ensure_ascii=False, indent=2))
+                except json.JSONDecodeError:
+                    print("🤖:", resp)
             except Exception as e:
                 print("⚠️ 出错:", e)
 
     async def run(self):
-        async with self.client as client:
+        async with self.client:
             try:
-                await client.ping()
-                print("✅ MCP Server 握手成功，开始对话")
+                await self.client.ping()
+                print("✅ MCP Server 握手成功")
             except Exception as e:
-                print("❌ 握手失败，请检查 URL 或服务状态：", e)
+                print("❌ 无法连接 MCP Server：", e)
                 return
             await self.chat_loop()
 
-
-# ------------------------- 入口 -------------------------
 
 async def _main():
     if len(sys.argv) != 2:
         print("用法: python -m mcpshop.services.mcp_client <http://host:port/mcp>")
         sys.exit(1)
-    url = sys.argv[1]
-    client = MCPClient(url)
-    await client.run()
+    await MCPClient(sys.argv[1]).run()
 
 
 if __name__ == "__main__":

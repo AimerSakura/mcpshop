@@ -24,6 +24,13 @@ async def list_cart(
 ):
     return await get_cart_items(db, user.user_id)
 
+@router.delete("/clear", status_code=204)
+async def clear_user_cart(
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    await clear_cart(db, user.user_id)
+
 @router.delete("/{cart_item_id}", status_code=204)
 async def delete_item(
     cart_item_id: int,
@@ -33,9 +40,3 @@ async def delete_item(
     # 可验证归属
     await remove_cart_item(db, cart_item_id)
 
-@router.delete("/clear", status_code=204)
-async def clear_user_cart(
-    user=Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    await clear_cart(db, user.user_id)

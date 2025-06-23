@@ -1,6 +1,8 @@
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from mcpshop.db.session import get_db
 from mcpshop.crud.cart import get_cart_items, clear_cart
@@ -35,6 +37,11 @@ async def list_orders(
 
 # ★ 管理员查所有订单（管理员专属接口）
 @router.get("/all", response_model=List[OrderOut], dependencies=[Depends(get_current_admin_user)])
-async def list_all_orders(db: AsyncSession = Depends(get_db)):
-    result = await db.execute("SELECT * FROM orders")
+async def list_all_orders(
+    db: AsyncSession = Depends(get_db)
+):
+    # 使用 ORM 查询一次性加载关联 items
+    result = await db.execute(
+        select(Order).options(selectinload(Order.items))
+    )
     return result.scalars().all()

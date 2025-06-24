@@ -19,8 +19,7 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from dotenv import load_dotenv
-
-from mcpshop.api.deps import get_current_user
+from mcpshop.api.deps import get_current_user, oauth2_scheme
 from mcpshop.db.session import get_db
 from mcpshop.schemas.chat import ChatRequest
 from mcpshop.services.mcp_client import MCPClient
@@ -43,13 +42,15 @@ _ai = MCPClient(MCP_API_URL)
 @router.post("/api/chat", summary="REST 对话接口")
 async def chat_endpoint(
     req: ChatRequest,
+    token: str = Depends(oauth2_scheme),
     current=Depends(get_current_user),
 ):
     """
     单轮对话：直接把用户文本发给 MCP-Server，返回 AI 的结果
     """
-    async with _ai.client:                      # ★ 关键：开启 fastmcp 会话
-        resp = await _ai.process_query(req.text)
+    async with _ai.client:
+        print("用户token",token)# ★ 关键：开启 fastmcp 会话
+        resp = await _ai.process_query(req.text,user_token=token)
 
     return resp
 
@@ -62,6 +63,7 @@ async def websocket_chat(
     ws: WebSocket,
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
 ):
     """
     多轮对话：建立 WebSocket 后循环收发
@@ -74,7 +76,7 @@ async def websocket_chat(
         try:
             while True:
                 text = await ws.receive_text()
-                answer = await _ai.process_query(text)
+                answer = await _ai.process_query(text, user_token=token)
 
                 # answer 可能是纯字符串，也可能已是 JSON 字符串/字典
                 if isinstance(answer, str):

@@ -1,4 +1,4 @@
-# 项目代码快照（版本 v0.6.0，2025-06-23 22:24:01）
+# 项目代码快照（版本 v0.7.0，2025-06-25 01:21:38）
 
 ## 项目结构
 
@@ -133,11 +133,18 @@ __all__ = ["settings", "logger"]
 ```
 
 ### `backend\mcpshop\api\auth.py`
-- 行数：40 行  
-- 大小：1.58 KB  
-- 最后修改：2025-06-15 17:37:08  
+> **⚡ 已更新** 生成于 `2025-06-25 01:21:38`
+
+- 行数：44 行  
+- 大小：1.84 KB  
+- 最后修改：2025-06-24 23:53:39  
 
 ```py
+# ------------------------------------------------------------
+# 文件：backend/mcpshop/api/auth.py
+# 说明：用户注册 & 登录接口，登录成功后持久化 JWT → Session‑Cookie
+# ------------------------------------------------------------
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm
@@ -177,12 +184,9 @@ async def login_for_access_token(
         )
     access_token = create_access_token(subject=user.username)
     return {"access_token": access_token, "token_type": "bearer"}
-
 ```
 
 ### `backend\mcpshop\api\cart.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：43 行  
 - 大小：1.31 KB  
 - 最后修改：2025-06-23 19:57:13  
@@ -234,11 +238,11 @@ async def delete_item(
 ```
 
 ### `backend\mcpshop\api\chat.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
+> **⚡ 已更新** 生成于 `2025-06-25 01:21:38`
 
-- 行数：104 行  
-- 大小：3.42 KB  
-- 最后修改：2025-06-23 22:16:35  
+- 行数：105 行  
+- 大小：3.56 KB  
+- 最后修改：2025-06-25 00:58:36  
 
 ```py
 # -*- coding: utf-8 -*-
@@ -262,8 +266,7 @@ from fastapi import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 from dotenv import load_dotenv
-
-from mcpshop.api.deps import get_current_user
+from mcpshop.api.deps import get_current_user, oauth2_scheme
 from mcpshop.db.session import get_db
 from mcpshop.schemas.chat import ChatRequest
 from mcpshop.services.mcp_client import MCPClient
@@ -286,13 +289,15 @@ _ai = MCPClient(MCP_API_URL)
 @router.post("/api/chat", summary="REST 对话接口")
 async def chat_endpoint(
     req: ChatRequest,
+    token: str = Depends(oauth2_scheme),
     current=Depends(get_current_user),
 ):
     """
     单轮对话：直接把用户文本发给 MCP-Server，返回 AI 的结果
     """
-    async with _ai.client:                      # ★ 关键：开启 fastmcp 会话
-        resp = await _ai.process_query(req.text)
+    async with _ai.client:
+        print("用户token",token)# ★ 关键：开启 fastmcp 会话
+        resp = await _ai.process_query(req.text,user_token=token)
 
     return resp
 
@@ -305,6 +310,7 @@ async def websocket_chat(
     ws: WebSocket,
     user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
+    token: str = Depends(oauth2_scheme),
 ):
     """
     多轮对话：建立 WebSocket 后循环收发
@@ -317,7 +323,7 @@ async def websocket_chat(
         try:
             while True:
                 text = await ws.receive_text()
-                answer = await _ai.process_query(text)
+                answer = await _ai.process_query(text, user_token=token)
 
                 # answer 可能是纯字符串，也可能已是 JSON 字符串/字典
                 if isinstance(answer, str):
@@ -344,7 +350,6 @@ async def websocket_chat(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"WebSocket 对话出错：{e}",
             )
-
 ```
 
 ### `backend\mcpshop\api\deps.py`
@@ -400,8 +405,6 @@ async def get_current_admin_user(
 ```
 
 ### `backend\mcpshop\api\orders.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：48 行  
 - 大小：1.71 KB  
 - 最后修改：2025-06-23 20:27:25  
@@ -538,8 +541,6 @@ async def delete_sku(
 ```
 
 ### `backend\mcpshop\api\users.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：29 行  
 - 大小：1.13 KB  
 - 最后修改：2025-06-23 20:38:10  
@@ -586,9 +587,11 @@ from .config import Settings
 ```
 
 ### `backend\mcpshop\core\config.py`
+> **⚡ 已更新** 生成于 `2025-06-25 01:21:38`
+
 - 行数：37 行  
 - 大小：1.13 KB  
-- 最后修改：2025-06-12 00:25:42  
+- 最后修改：2025-06-25 00:16:56  
 
 ```py
 # mcpshop/core/config.py
@@ -608,7 +611,7 @@ class Settings(BaseSettings):
     # —— JWT ——  
     JWT_SECRET_KEY: str = Field(..., env="JWT_SECRET_KEY")
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 180
 
     # —— MCP Server ——  
     MCP_API_URL: AnyUrl = Field(..., env="MCP_API_URL")
@@ -797,8 +800,6 @@ from .message import *
 ```
 
 ### `backend\mcpshop\crud\cart.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：60 行  
 - 大小：2.08 KB  
 - 最后修改：2025-06-23 19:09:58  
@@ -1152,8 +1153,6 @@ async def get_db() -> AsyncSession:
 ```
 
 ### `backend\mcpshop\main.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：49 行  
 - 大小：1.44 KB  
 - 最后修改：2025-06-15 19:59:14  
@@ -1468,8 +1467,6 @@ class TokenData(BaseModel):
 ```
 
 ### `backend\mcpshop\schemas\cart.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：22 行  
 - 大小：0.49 KB  
 - 最后修改：2025-06-23 19:12:34  
@@ -1593,8 +1590,6 @@ class OrderOut(BaseModel):
 ```
 
 ### `backend\mcpshop\schemas\product.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：31 行  
 - 大小：0.84 KB  
 - 最后修改：2025-06-23 20:31:31  
@@ -1634,8 +1629,6 @@ class ProductOut(ProductBase):
 ```
 
 ### `backend\mcpshop\schemas\user.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
-
 - 行数：32 行  
 - 大小：1.06 KB  
 - 最后修改：2025-06-23 20:56:04  
@@ -1685,9 +1678,11 @@ class UserOut(UserBase):
 ```
 
 ### `backend\mcpshop\scripts\mcp_server.py`
-- 行数：163 行  
-- 大小：5.91 KB  
-- 最后修改：2025-06-15 18:52:12  
+> **⚡ 已更新** 生成于 `2025-06-25 01:21:38`
+
+- 行数：171 行  
+- 大小：6.28 KB  
+- 最后修改：2025-06-25 01:10:52  
 
 ```py
 import os
@@ -1705,6 +1700,9 @@ from jose import JWTError
 from sqlalchemy import text
 from sqlalchemy import select
 from mcpshop.models.user import User
+from sqlalchemy import select
+from mcpshop.models.order import Order
+from typing import Optional
 # 强制覆盖系统环境变量
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
 
@@ -1816,28 +1814,33 @@ async def delete_user(token: str, username: str) -> str:
         return json.dumps({"ok": True, "deleted_user": username}, ensure_ascii=False)
 
 @mcp.tool()
-async def list_all_orders(token: str) -> str:
+async def list_all_orders(token: Optional[str] = None) -> str:   # ✅ 可选
+    # —— 1. 补 token，如果后端没注入就报错 ——
+    if not token:       # None 或空串都算未注入
+        return json.dumps({"error": "缺少管理员 Token"}, ensure_ascii=False)
+
+    # —— 2. 校验 token ——        （原逻辑不变）
     try:
         username = decode_access_token(token)
     except JWTError:
         return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
 
     async with AsyncSessionLocal() as db:
-        from mcpshop.crud.user import get_user_by_username
         user = await get_user_by_username(db, username)
         if not user or not user.is_admin:
             return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
 
-        # 这里需要加text()
-        result = await db.execute(text("SELECT * FROM orders"))
-        orders = result.scalars().all()
-        return json.dumps([{
-            "order_id": o.order_id,
-            "user_id": o.user_id,
+        result = await db.execute(select(Order))          # ORM 写法更稳
+        orders  = result.scalars().all()
+        payload = [{
+            "order_id":    o.order_id,
+            "user_id":     o.user_id,
             "total_cents": o.total_cents,
-            "status": o.status.value,
-            "created_at": str(o.created_at)
-        } for o in orders], ensure_ascii=False)
+            "status":      o.status.value,
+            "created_at":  o.created_at.isoformat(),
+        } for o in orders]
+
+        return json.dumps(payload, ensure_ascii=False)
 
 
 if __name__ == "__main__":
@@ -1856,11 +1859,11 @@ if __name__ == "__main__":
 ```
 
 ### `backend\mcpshop\services\mcp_client.py`
-> **⚡ 已更新** 生成于 `2025-06-23 22:24:01`
+> **⚡ 已更新** 生成于 `2025-06-25 01:21:38`
 
 - 行数：138 行  
-- 大小：4.87 KB  
-- 最后修改：2025-06-23 21:57:08  
+- 大小：4.84 KB  
+- 最后修改：2025-06-25 01:13:20  
 
 ```py
 import os
@@ -1938,8 +1941,8 @@ class MCPClient:
         tool_args = json.loads(tc.function.arguments)
 
         # ★★★ 自动补全所有需要token的工具 ★★★
-        if "token" in tool_args and not tool_args["token"]:
-            tool_args["token"] = user_token
+        #if "token" in tool_args:
+        tool_args["token"] = user_token
 
         print(f"[调用工具] {tool_name} {tool_args}")
         res = await self.client.call_tool(tool_name, tool_args)

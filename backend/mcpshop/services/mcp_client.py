@@ -73,8 +73,8 @@ class MCPClient:
         tool_args = json.loads(tc.function.arguments)
 
         # ★★★ 自动补全所有需要token的工具 ★★★
-        if "token" in tool_args and not tool_args["token"]:
-            tool_args["token"] = user_token
+        #if "token" in tool_args:
+        tool_args["token"] = user_token
 
         print(f"[调用工具] {tool_name} {tool_args}")
         res = await self.client.call_tool(tool_name, tool_args)

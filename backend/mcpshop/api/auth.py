@@ -1,3 +1,8 @@
+# ------------------------------------------------------------
+# 文件：backend/mcpshop/api/auth.py
+# 说明：用户注册 & 登录接口，登录成功后持久化 JWT → Session‑Cookie
+# ------------------------------------------------------------
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.security import OAuth2PasswordRequestForm

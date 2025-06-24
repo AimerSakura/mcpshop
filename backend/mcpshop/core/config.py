@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     # —— JWT ——  
     JWT_SECRET_KEY: str = Field(..., env="JWT_SECRET_KEY")
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 180
 
     # —— MCP Server ——  
     MCP_API_URL: AnyUrl = Field(..., env="MCP_API_URL")

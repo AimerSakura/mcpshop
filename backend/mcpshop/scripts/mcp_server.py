@@ -13,6 +13,9 @@ from jose import JWTError
 from sqlalchemy import text
 from sqlalchemy import select
 from mcpshop.models.user import User
+from sqlalchemy import select
+from mcpshop.models.order import Order
+from typing import Optional
 # 强制覆盖系统环境变量
 load_dotenv(r"C:\CodeProject\Pycharm\MCPshop\.env", override=True)
 
@@ -124,28 +127,33 @@ async def delete_user(token: str, username: str) -> str:
         return json.dumps({"ok": True, "deleted_user": username}, ensure_ascii=False)
 
 @mcp.tool()
-async def list_all_orders(token: str) -> str:
+async def list_all_orders(token: Optional[str] = None) -> str:   # ✅ 可选
+    # —— 1. 补 token，如果后端没注入就报错 ——
+    if not token:       # None 或空串都算未注入
+        return json.dumps({"error": "缺少管理员 Token"}, ensure_ascii=False)
+
+    # —— 2. 校验 token ——        （原逻辑不变）
     try:
         username = decode_access_token(token)
     except JWTError:
         return json.dumps({"error": "无效或过期 Token"}, ensure_ascii=False)
 
     async with AsyncSessionLocal() as db:
-        from mcpshop.crud.user import get_user_by_username
         user = await get_user_by_username(db, username)
         if not user or not user.is_admin:
             return json.dumps({"error": "管理员权限不足"}, ensure_ascii=False)
 
-        # 这里需要加text()
-        result = await db.execute(text("SELECT * FROM orders"))
-        orders = result.scalars().all()
-        return json.dumps([{
-            "order_id": o.order_id,
-            "user_id": o.user_id,
+        result = await db.execute(select(Order))          # ORM 写法更稳
+        orders  = result.scalars().all()
+        payload = [{
+            "order_id":    o.order_id,
+            "user_id":     o.user_id,
             "total_cents": o.total_cents,
-            "status": o.status.value,
-            "created_at": str(o.created_at)
-        } for o in orders], ensure_ascii=False)
+            "status":      o.status.value,
+            "created_at":  o.created_at.isoformat(),
+        } for o in orders]
+
+        return json.dumps(payload, ensure_ascii=False)
 
 
 if __name__ == "__main__":
